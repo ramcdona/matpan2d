@@ -53,7 +53,7 @@ elseif (runcase == 2)
 
     xep = [xep1 xep2(2:end) xep3(2:end)];
     rep = [rep1 rep2(2:end) rep3(2:end)];
-else
+elseif (runcase == 3 )
 
     % Construct an ellipse
     ncirc = 101;
