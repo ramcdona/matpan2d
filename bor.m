@@ -124,7 +124,7 @@ if( drawplots )
 
 % Post-process
 figure(2)
-plot( xcp, gamma, 'o', xep, rep )
+plot( xcp, gamma, 'o-' )
 ylabel('v/Vinf')
 
 figure(3)
