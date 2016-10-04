@@ -13,8 +13,11 @@ drawplots = true;
 % 1 -- Sphere
 % 2 -- BOR with aft cone
 % 3 -- Ellipsoid
-runcase = 3;
+% 4 -- NACA 4-Digit duct
+runcase = 4;
 
+% Default to no kutta condition, turn on inside runcase setup.
+kutta = false;
 if ( runcase == 1 )
     % Construct a circle
     ncirc = 36;
@@ -68,6 +71,50 @@ elseif (runcase == 3 )
 
     [pot, u, v, w] = ellipsoidflow( xep, rep, zeros(1,ncirc), [W 0 0], rada, radb, radb );
     Vmag = sqrt(u.^2 + v.^2 + w.^2);
+else
+    naf = 51;
+
+    alpha = 5;       % Degrees about LE
+    xoff = 0.0;      % X-Offset of LE
+    roff = 0.5;      % R-Offset of LE
+
+    % NACA 4-Digit airfoil parameters
+    dig1 = 4;
+    dig2 = 4;
+    dig34 = 12;
+
+    flipaf = false;
+
+    % Airfoil point spacing
+    % 1 -- Cosine cluster LE, TE
+    % 2 -- Cosine cluster LE
+    % 3 -- Uniform
+    spacing = 1;
+    [ xep, rep ] = naca4( dig1, dig2, dig34, naf, spacing );
+
+    if ( flipaf )
+        rep = -1 * rep;
+        rep = flip(rep);
+        xep = flip(xep);
+    end
+
+    % 'Angle of attack'
+    theta = -alpha * pi/180;
+    A = [cos(theta) -sin(theta); sin(theta) cos(theta)] * [xep rep]';
+    xep = A(1,:);
+    rep = A(2,:);
+
+    % Translate LE point.
+    xep = xep + xoff;
+    rep = rep + roff;
+
+    % Disable local curvature term
+    rad = inf;
+
+    % Index for Kutta condition
+    jtelow = 1;
+    jteup = naf - 1;
+    kutta = true;
 end
 
 npt = length( xep );
@@ -114,9 +161,33 @@ AIC( 1 : npan + 1 : npan * npan ) = AICii;
 % Setup RHS
 rhs = -W * cos( theta );
 
+if ( kutta )
+    % Correction term for back-diagonal
+    for j = 1:npan % Loop over column j
+        AIC(j,j) = - ( sum( AIC(:,j) .* ds' ) - AIC(j,j) * ds(j) ) / ds(j);
+    end
+
+    % Apply Kutta condition to AIC
+    AIC(:,jtelow) = AIC(:,jtelow) - AIC(:,jteup);
+    AIC(:,jteup)=[];
+    AIC(jtelow,:) = AIC(jtelow,:) - AIC(jteup,:);
+    AIC(jteup,:)=[];
+
+    % Apply Kutta condition to RHS
+    rhs(:,jtelow) = rhs(:,jtelow) - rhs(:,jteup);
+    rhs(:,jteup)=[];
+end
+
 % Solve (gamma is tangental velocity at control points)
 gamma = AIC \ rhs';
 
+% Put kutta condition back on for plotting and post-processing.
+if ( kutta )
+    gamma = [gamma(1:jteup-1); -gamma(jtelow); gamma(jteup+1:end)];
+end
+
+% Flip reversed panel velocities for plotting
+gamma = gamma .* sign(dx)';
 
 Cp = 1 - gamma.^2;
 
