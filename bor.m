@@ -8,6 +8,8 @@ format compact
 % Freestream velocity
 W = 1.0;
 
+drawplots = true;
+
 % 1 -- Sphere
 % 2 -- BOR with aft cone
 % 3 -- Ellipsoid
@@ -71,9 +73,11 @@ end
 npt = length( xep );
 npan = npt - 1;
 
-figure( 1 )
-plot( xep, rep, 'x-' )
-axis equal
+if ( drawplots)
+    figure( 1 )
+    plot( xep, rep, 'x-' )
+    axis equal
+end
 
 % Process geometry
 dx = xep(2:end) - xep(1:end-1);
@@ -113,6 +117,8 @@ rhs = -W * cos( theta );
 % Solve (gamma is tangental velocity at control points)
 gamma = AIC \ rhs';
 
+if( drawplots )
+
 % Post-process
 figure(2)
 plot( xcp, gamma, 'o', xep, rep )
@@ -140,5 +146,7 @@ elseif ( runcase == 3 )
 
     err = Vex - gamma';
     disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
+
+end
 
 end
