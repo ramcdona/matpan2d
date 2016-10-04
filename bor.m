@@ -1,232 +1,184 @@
-clear all
-format compact
-
 % Body of revolution surface vorticity code from
 % Vortex Element Methods for Fluid Dynamic Analysis of Engineering Systems
 % R. I. Lewis, 1991, Cambridge University Press, Ch. 4.
 
-% Freestream velocity
-W = 1.0;
+% This solver script expects some variables to be set as input before
+% execution.
+%
+% There may be multiple input bodies/objects, each an item in a cell array.
+%
+% drawplots        % Flag to draw plots and postprocess
+% xepts{nseg};     % X Endpoints of panels
+% repts{nseg};     % R Endpoints of panels
+% kuttas{nseg};    % Flags to apply Kutta condition to each body
+% jtels{nseg};     % Index to TE lower panel
+% jteus{nseg};     % Index to TE upper panel
+% rads{nseg};      % Panel radius of curvature vector
+% Vexs{nseg};      % Exact solution at panel endpoints for isolated body
+%
 
-drawplots = true;
-
-% 1 -- Sphere
-% 2 -- BOR with aft cone
-% 3 -- Ellipsoid
-% 4 -- NACA 4-Digit duct
-runcase = 4;
-
-% Default to no kutta condition, turn on inside runcase setup.
-kutta = false;
-if ( runcase == 1 )
-    % Construct a circle
-    ncirc = 36;
-    rad = 0.5;
-    thetacirc = linspace( pi, 0, ncirc );
-
-    % Panel endpoints
-    xep = rad * cos( thetacirc );
-    rep = rad * sin( thetacirc );
-
-    % % Exact solution
-    Vmag = 1.5 * sin( thetacirc );
-    %
-    % % [potex, uex, vex, wex] = sphereflow(xep, rep, zeros(size(xep)), [W 0 0], rad );
-    % % Vmag = sqrt( uex.^2 + vex.^2 + wex.^2 );
-    %
-    % Cpex = 1 - Vmag.^2;
-
-elseif (runcase == 2)
-
-    % Construct example body
-    ncirc = 10;
-    nstraight = 22;
-    rad = 0.16;
-    thetacirc = linspace( pi, pi/2, ncirc );
-
-    xep1 = rad * cos( thetacirc ) + rad;
-    rep1 = rad * sin( thetacirc );
-    rad1 = rad * ones( 1, ncirc - 1 );
-
-    xep2 = linspace( rad, 0.77, nstraight );
-    rep2 = rad * ones( 1, nstraight );
-
-    xep3 = linspace( 0.77, 1.367128, nstraight);
-    rep3 = linspace( rad, 0, nstraight);
-
-    xep = [xep1 xep2(2:end) xep3(2:end)];
-    rep = [rep1 rep2(2:end) rep3(2:end)];
-elseif (runcase == 3 )
-
-    % Construct an ellipse
-    ncirc = 101;
-    rada = 5.0;
-    radb = 0.5;
-
-    thetacirc = linspace( pi, 0, ncirc );
-
-    % Panel endpoints
-    xep = rada * cos( thetacirc );
-    rep = radb * sin( thetacirc );
-
-    [pot, u, v, w] = ellipsoidflow( xep, rep, zeros(1,ncirc), [W 0 0], rada, radb, radb );
-    Vmag = sqrt(u.^2 + v.^2 + w.^2);
-else
-    naf = 51;
-
-    alpha = 5;       % Degrees about LE
-    xoff = 0.0;      % X-Offset of LE
-    roff = 0.5;      % R-Offset of LE
-
-    % NACA 4-Digit airfoil parameters
-    dig1 = 4;
-    dig2 = 4;
-    dig34 = 12;
-
-    flipaf = false;
-
-    % Airfoil point spacing
-    % 1 -- Cosine cluster LE, TE
-    % 2 -- Cosine cluster LE
-    % 3 -- Uniform
-    spacing = 1;
-    [ xep, rep ] = naca4( dig1, dig2, dig34, naf, spacing );
-
-    if ( flipaf )
-        rep = -1 * rep;
-        rep = flip(rep);
-        xep = flip(xep);
-    end
-
-    % 'Angle of attack'
-    theta = -alpha * pi/180;
-    A = [cos(theta) -sin(theta); sin(theta) cos(theta)] * [xep rep]';
-    xep = A(1,:);
-    rep = A(2,:);
-
-    % Translate LE point.
-    xep = xep + xoff;
-    rep = rep + roff;
-
-    % Disable local curvature term
-    rad = inf;
-
-    % Index for Kutta condition
-    jtelow = 1;
-    jteup = naf - 1;
-    kutta = true;
-end
-
-npt = length( xep );
-npan = npt - 1;
+nseg = length( xepts );
 
 if ( drawplots)
     figure( 1 )
-    plot( xep, rep, 'x-' )
+    clf
+    hold on
+    for iseg=1:nseg
+        plot( xepts{iseg}, repts{iseg}, 'x-' );
+    end
+    hold off
     axis equal
 end
 
+npan = 0;
 % Process geometry
-dx = xep(2:end) - xep(1:end-1);
-dr = rep(2:end) - rep(1:end-1);
+for iseg=1:nseg
+    xep = xepts{iseg};
+    rep = repts{iseg};
 
-ds = sqrt( dx.^2 + dr.^2 );                    % Panel arclength
-theta = atan2( dr, dx );                       % Panel slope angle
-xcp = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
-rcp = 0.5 * ( rep(2:end) + rep(1:end-1) );     % Panel r center point
+    dx{iseg} = xep(2:end) - xep(1:end-1);
+    dr{iseg} = rep(2:end) - rep(1:end-1);
 
-% Build up curvature term at control points.
-if ( runcase == 2 )
-    rad = [rad1 inf(1, npan - length(rad1) )];
-elseif ( runcase == 3 )
-    rad = rada.^2*radb.^2.*( xcp.^2./rada.^4 + rcp.^2./radb.^4 ).^1.5;
-    % rad = inf(1, ncirc - 1 );
+    ds{iseg} = sqrt( dx{iseg}.^2 + dr{iseg}.^2 );        % Panel arclength
+    theta{iseg} = atan2( dr{iseg}, dx{iseg} );           % Panel slope angle
+    xcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+    rcp{iseg} = 0.5 * ( rep(2:end) + rep(1:end-1) );     % Panel r center point
+
+    npans{iseg} = length( xcp{iseg} );
+    npan = npan + npans{iseg};
 end
 
-AIC = nan( npan, npan );
-% i loop over panels implied by . operations
-for j = 1:npan  % Loop over vortex j
-    [ uj, vj ] = ringvortex( xcp(j), rcp(j), xcp, rcp );
-    AIC(:,j) = ( uj .* cos( theta ) + vj .* sin( theta ) ) .* ds(j);
-end
 
-C = 4.0 * pi * rcp ./ ds;
-curve = ds ./ ( 4.0 * pi * rad );  % Constant radius of curvature for sphere
+AICs = cell( nseg, nseg );
+for iseg=1:nseg
+    for jseg = 1:nseg
 
-% Self influence term
-AICii = -0.5 - ( log( 2.0 * C ) - 0.25 ) ./ C .* cos( theta ) + curve;
-% Excessively clever way to substitute the matrix diagonal.
-AIC( 1 : npan + 1 : npan * npan ) = AICii;
+        AICij = nan( npans{jseg}, npans{iseg} );
 
-% Setup RHS
-rhs = -W * cos( theta );
+        % i loop over panels implied by . operations
+        for j = 1:npans{iseg}  % Loop over vortex j
+            [ uj, vj ] = ringvortex( xcp{iseg}(j), rcp{iseg}(j), xcp{jseg}, rcp{jseg} );
+            AICij(:,j) = ( uj .* cos( theta{jseg} ) + vj .* sin( theta{jseg} ) ) .* ds{iseg}(j);
+        end
 
-if ( kutta )
-    % Correction term for back-diagonal
-    for j = 1:npan % Loop over column j
-        AIC(j,j) = - ( sum( AIC(:,j) .* ds' ) - AIC(j,j) * ds(j) ) / ds(j);
+        if ( iseg == jseg )
+            C = 4.0 * pi * rcp{iseg} ./ ds{iseg};
+            curve = ds{iseg} ./ ( 4.0 * pi * rads{iseg} );
+
+            % Self influence term
+            AICii = -0.5 - ( log( 2.0 * C ) - 0.25 ) ./ C .* cos( theta{iseg} ) + curve;
+            % Excessively clever way to substitute the matrix diagonal.
+            AICij( 1 : npans{iseg} + 1 : npans{iseg} * npans{iseg} ) = AICii;
+
+            if ( kuttas{iseg} )
+                % Correction term for back-diagonal
+                for j = 1:npans{iseg} % Loop over column j
+                    AICij(j,j) = - ( sum( AICij(:,j) .* ds{iseg}' ) - AICij(j,j) * ds{iseg}(j) ) / ds{iseg}(j);
+                end
+            end
+
+        end
+
+        AICs{iseg, jseg} = AICij;
     end
+end
 
-    % Apply Kutta condition to AIC
-    AIC(:,jtelow) = AIC(:,jtelow) - AIC(:,jteup);
-    AIC(:,jteup)=[];
-    AIC(jtelow,:) = AIC(jtelow,:) - AIC(jteup,:);
-    AIC(jteup,:)=[];
+% Setup & Assemble RHS
+rhs = [];
+for iseg=1:nseg
+    rhss{iseg} = -W * cos( theta{iseg} );
+    rhs = [rhs  rhss{iseg}];
+end
 
-    % Apply Kutta condition to RHS
-    rhs(:,jtelow) = rhs(:,jtelow) - rhs(:,jteup);
-    rhs(:,jteup)=[];
+% Assemble AIC from cell matrices.
+AIC=[];
+panidx=[];
+segidx=[];
+for iseg=1:nseg
+    AICrow = [];
+    for jseg = 1:nseg
+        AICrow = [AICrow AICs{jseg, iseg}];
+    end
+    AIC = [AIC; AICrow];
+
+    panidx = [panidx 1:npans{iseg}];
+    segidx = [segidx iseg*ones(1,npans{iseg})];
+end
+idx = [segidx; panidx; 1:npan];
+modidx = idx;
+
+
+for iseg=1:nseg
+    if ( kuttas{iseg} )
+        jtelow = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jtels{iseg} ) );
+        jteup = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jteus{iseg} ) );
+
+        % Apply Kutta condition to AIC
+        AIC(:,jtelow) = AIC(:,jtelow) - AIC(:,jteup);
+        AIC(:,jteup)=[];
+        AIC(jtelow,:) = AIC(jtelow,:) - AIC(jteup,:);
+        AIC(jteup,:)=[];
+
+        % Apply Kutta condition to RHS
+        rhs(:,jtelow) = rhs(:,jtelow) - rhs(:,jteup);
+        rhs(:,jteup)=[];
+
+        % Remove index rows to match
+        modidx(:,jteup)=[];
+    end
 end
 
 % Solve (gamma is tangental velocity at control points)
 gamma = AIC \ rhs';
 
-% Put kutta condition back on for plotting and post-processing.
-if ( kutta )
-    gamma = [gamma(1:jteup-1); -gamma(jtelow); gamma(jteup+1:end)];
+% Break gamma vector into per-body parts
+for iseg=1:nseg
+    gam = gamma( modidx(1,:) == iseg );
+
+    % Put kutta condition back on for plotting and post-processing.
+    if ( kuttas{iseg} )
+        jtelow = jtels{iseg};
+        jteup = jteus{iseg};
+
+        gam = [gam(1:jteup-1); -gam(jtelow); gam(jteup+1:end)];
+    end
+
+    % Flip reversed panel velocities for plotting
+    gam = gam .* sign(dx{iseg})';
+
+    gammas{iseg} = gam;
+    Cp{iseg} = 1 - gam.^2;
 end
 
-% Flip reversed panel velocities for plotting
-gamma = gamma .* sign(dx)';
-
-Cp = 1 - gamma.^2;
 
 if( drawplots )
 
 % Post-process
 figure(2)
-plot( xcp, gamma, 'o-' )
+clf
+hold on
+for iseg=1:nseg
+    plot( xcp{iseg}, gammas{iseg}, 'o-' )
+    plot( xcp{iseg}, Vexs{iseg} )
+end
+hold off
 ylabel('v/Vinf')
 
 figure(3)
-plot( xcp, -Cp );
+clf
+hold on
+for iseg=1:nseg
+    plot( xcp{iseg}, -Cp{iseg} );
+end
+hold off
 ylabel('-C_p')
 
-% Do some case-specific post-processing.
-if ( runcase == 1 )
-    figure(2)
-    hold on
-    plot( xep, Vmag )
-    hold off
-
-    % Exact solution at control points.
-    Vex = 1.5 * sin( atan2( rcp, xcp ) );
-
-    err = Vex - gamma';
-    disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
-elseif ( runcase == 3 )
-    figure(2)
-    hold on
-    plot( xep, Vmag )
-    hold off
-
-
-    [pot, u, v, w] = ellipsoidflow( xcp, rcp, zeros(1,npan), [W 0 0], rada, radb, radb );
-    Vex = sqrt(u.^2 + v.^2 + w.^2);
-
-    err = Vex - gamma';
-    disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
-
+% Calculate maximum error for cases with exact isolated solution
+for iseg=1:nseg
+    if ( ~isnan( Vexs{iseg}(1) ) )
+        err = Vexs{iseg} - gammas{iseg}';
+        disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
+    end
 end
 
 end
