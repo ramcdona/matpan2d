@@ -117,6 +117,9 @@ rhs = -W * cos( theta );
 % Solve (gamma is tangental velocity at control points)
 gamma = AIC \ rhs';
 
+
+Cp = 1 - gamma.^2;
+
 if( drawplots )
 
 % Post-process
@@ -124,8 +127,13 @@ figure(2)
 plot( xcp, gamma, 'o', xep, rep )
 ylabel('v/Vinf')
 
+figure(3)
+plot( xcp, -Cp );
+ylabel('-C_p')
+
 % Do some case-specific post-processing.
 if ( runcase == 1 )
+    figure(2)
     hold on
     plot( xep, Vmag )
     hold off
@@ -136,6 +144,7 @@ if ( runcase == 1 )
     err = Vex - gamma';
     disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
 elseif ( runcase == 3 )
+    figure(2)
     hold on
     plot( xep, Vmag )
     hold off
