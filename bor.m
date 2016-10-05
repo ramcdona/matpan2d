@@ -7,7 +7,9 @@
 %
 % There may be multiple input bodies/objects, each an item in a cell array.
 %
+% Sref             % Reference area for calculating CD
 % drawplots        % Flag to draw plots and postprocess
+% names{nseg};     % Component names for output
 % xepts{nseg};     % X Endpoints of panels
 % repts{nseg};     % R Endpoints of panels
 % kuttas{nseg};    % Flags to apply Kutta condition to each body
@@ -180,5 +182,17 @@ for iseg=1:nseg
         disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
     end
 end
+
+% Post-process axial force.
+CDi = [];
+CD = 0.0;
+for iseg=1:nseg
+    CDi{iseg} = - 2.0 * pi * sum( Cp{iseg}' .* sin( theta{iseg} ) .* rcp{iseg} .* ds{iseg} ) / Sref;
+    CD = CD + CDi{iseg};
+
+    disp(['CD on ' names{iseg} ':  ' num2str(CDi{iseg})])
+end
+
+disp(['CD total:  ' num2str(CD)])
 
 end

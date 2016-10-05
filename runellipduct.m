@@ -4,6 +4,8 @@ format compact
 % Freestream velocity
 W = 1.0;
 
+Sref = 1.0;
+
 drawplots = true;
 
 % Construct an ellipse
@@ -40,6 +42,7 @@ jtelow = -1;
 jteup = - 1;
 kutta = false;
 
+names{1} = 'Ellipsoid';
 xepts{1} = xep;
 repts{1} = rep;
 kuttas{1} = kutta;
@@ -57,6 +60,7 @@ jteup = naf - 1;
 kutta = true;
 
 
+names{2} = ['NACA ' num2str(dig1) num2str(dig2) num2str(dig34) ' Duct'];
 xepts{2} = xep;
 repts{2} = rep;
 kuttas{2} = kutta;

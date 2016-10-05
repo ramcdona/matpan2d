@@ -4,6 +4,8 @@ format compact
 % Freestream velocity
 W = 1.0;
 
+Sref = 1.0;
+
 drawplots = true;
 
 % 1 -- Sphere
@@ -23,6 +25,7 @@ if ( runcase == 1 )
     xcen = 0.0;
 
     [xep, rep, rad, Vex] = setupsphere( ncirc, rad, xcen );
+    name = 'Sphere';
 
 elseif (runcase == 2)
 
@@ -35,6 +38,7 @@ elseif (runcase == 2)
     xnose = 0.0;
 
     [xep, rep, rad, Vex] = setupbody( ncirc, nstraight, rad, len1, len2, xnose );
+    name = 'Body';
 
 elseif (runcase == 3 )
 
@@ -45,6 +49,7 @@ elseif (runcase == 3 )
     xcen = 0.0;
 
     [xep, rep, rad, Vex] = setupellipsoid( ncirc, rada, radb, xcen );
+    name = 'Ellipsoid';
 
 else
     naf = 51;
@@ -72,9 +77,11 @@ else
     jtelow = 1;
     jteup = naf - 1;
     kutta = true;
+    name = ['NACA ' num2str(dig1) num2str(dig2) num2str(dig34) ' Duct'];
 
 end
 
+names{1} = name;
 xepts{1} = xep;
 repts{1} = rep;
 kuttas{1} = kutta;
