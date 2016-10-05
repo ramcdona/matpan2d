@@ -6,6 +6,11 @@ W = 1.0;
 
 Sref = 1.0;
 
+% Velocity survey vectors
+xgrd = linspace( -1.5, 2, 35 );
+rgrd = linspace( 0, 1.5, 25 );
+rgrd(1) = 1e-3;
+
 drawplots = true;
 
 % Construct an ellipse

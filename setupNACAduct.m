@@ -2,6 +2,10 @@ function [xep, rep, rad, Vex] = setupNACAduct( naf, alpha, xoff, roff, dig1, dig
 
 [ xep, rep ] = naca4( dig1, dig2, dig34, naf, spacing );
 
+% Make sure airfoil is _exactly_ closed.
+xep(end) = xep(1);
+rep(end) = rep(1);
+
 if ( flipaf )
     rep = -1 * rep;
     rep = flip(rep);

@@ -9,6 +9,9 @@
 %
 % Sref             % Reference area for calculating CD
 % drawplots        % Flag to draw plots and postprocess
+% xgrd             % X Grid points for velocity survey
+% rgrd             % R Grid points for velocity survey
+%
 % names{nseg};     % Component names for output
 % xepts{nseg};     % X Endpoints of panels
 % repts{nseg};     % R Endpoints of panels
@@ -194,5 +197,122 @@ for iseg=1:nseg
 end
 
 disp(['CD total:  ' num2str(CD)])
+
+% Post-process velocity survey.
+if( drawplots )
+    nx = length( xgrd );
+    nr = length( rgrd );
+
+    [xg, rg] = meshgrid( xgrd, rgrd );
+
+    xv = reshape( xg, 1, [] );
+    rv = reshape( rg, 1, [] );
+
+    inv = zeros( size(xv) );
+
+    for iseg=1:nseg
+        xep = xepts{iseg};
+        rep = repts{iseg};
+
+        % Forces open polys to be closed
+        % Signed minimum distance -- negative is inside.
+        [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, rv, xep, rep, true );
+
+        % Loop to compare to nearby edge length.  Velocity survey has
+        % problems within one edge length of body
+        for i=1:length( inv )
+            if ( idx_c(i) < length( ds{iseg} ) && idx_c(i) > 0 )
+                inv(i) = inv(i) | ( dmin(i) < ds{iseg}(idx_c(i) ) );
+            end
+        end
+    end
+    xv = xv( ~inv );
+    rv = rv( ~inv );
+
+    uv = W * ones( size(xv) );
+    vv = zeros( size(xv) );
+    for iseg=1:nseg
+        % i loop over survey points implied by . operations
+        for j = 1:npans{iseg}  % Loop over vortex j
+            [ uj, vj ] = ringvortex( xcp{iseg}(j), rcp{iseg}(j), xv, rv );
+            uv = uv + uj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
+            vv = vv + vj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
+        end
+    end
+
+    Cedg = [];
+
+    for iseg=1:nseg
+        nnext = length(xv) + 1;
+        mcon = length(xcp{iseg}) - 1;
+
+        % Body on center line
+        if ( abs(repts{iseg}(1)) < 1e-6 )
+            xv = [xv xepts{iseg}(1)];
+            rv = [rv repts{iseg}(1)];
+            uv = [uv 0];
+            vv = [vv 0];
+            mcon = mcon + 1;
+        end
+
+        xv = [xv xcp{iseg}];
+        rv = [rv rcp{iseg}];
+
+        uv = [uv gammas{iseg}' .* cos( theta{iseg} ) .* sign(dx{iseg}) ];
+        vv = [vv gammas{iseg}' .* sin( theta{iseg} ) .* sign(dx{iseg}) ];
+
+        % Body on center line
+        if ( abs(repts{iseg}(end)) < 1e-6 )
+            xv = [xv xepts{iseg}(end)];
+            rv = [rv repts{iseg}(end)];
+            uv = [uv 0];
+            vv = [vv 0];
+            mcon = mcon + 1;
+        end
+
+        Cedg = [Cedg [ nnext:nnext+mcon; nnext+1:nnext+mcon nnext ] ];
+    end
+
+    DT = delaunayTriangulation( xv', rv', Cedg' );
+    tri = DT.ConnectivityList;
+    IO = ~isInterior(DT);
+
+    Vmagv = sqrt(uv.^2+vv.^2);
+    Cpv = 1 - Vmagv.^2;
+
+    figure(4)
+    quiver( xv, rv, uv, vv )
+    hold on
+    for iseg=1:nseg
+        plot( xepts{iseg}, repts{iseg} );
+    end
+    hold off
+    axis equal
+
+
+    figure(5)
+    trisurf( tri(IO,:), xv, rv, Vmagv, 'LineStyle', 'none' );
+    hold on
+    for iseg=1:nseg
+        plot( xepts{iseg}, repts{iseg} );
+    end
+    hold off
+    axis equal
+    view(0,90)
+    title('v/Vinf')
+
+
+    figure(6)
+    trisurf( tri(IO,:), xv, rv, Cpv, 'LineStyle', 'none' );
+    hold on
+    for iseg=1:nseg
+        plot( xepts{iseg}, repts{iseg} );
+    end
+    hold off
+    axis equal
+    view(0,90)
+    title('Cp')
+
+end
 
 end

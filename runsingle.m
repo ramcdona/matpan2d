@@ -6,6 +6,11 @@ W = 1.0;
 
 Sref = 1.0;
 
+% Velocity survey vectors
+xgrd = linspace( -1, 2, 31 );
+rgrd = linspace( 0, 1, 21 );
+rgrd(1) = 1e-3;
+
 drawplots = true;
 
 % 1 -- Sphere
