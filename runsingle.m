@@ -65,6 +65,7 @@ elseif (runcase == 3 )
 else
     naf = 51;
 
+    chord = 1.0;
     alpha = 5;       % Degrees about LE
     xoff = 0.0;      % X-Offset of LE
     roff = 0.5;      % R-Offset of LE
@@ -82,7 +83,7 @@ else
     % 3 -- Uniform
     spacing = 1;
 
-    [xep, rep, rad, Vex] = setupNACAduct( naf, alpha, xoff, roff, dig1, dig2, dig34, flipaf, spacing );
+    [xep, rep, rad, Vex] = setupNACAduct( naf, chord, alpha, xoff, roff, dig1, dig2, dig34, flipaf, spacing );
 
     % Index for Kutta condition
     jtelow = 1;

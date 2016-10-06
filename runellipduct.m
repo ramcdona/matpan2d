@@ -28,6 +28,7 @@ xcen = 0.0;
 % Construct a duct
 naf = 51;
 
+chord = 1.0;
 alpha = 5;       % Degrees about LE
 xoff = 0.75;      % X-Offset of LE
 roff = 0.5;      % R-Offset of LE
@@ -63,7 +64,7 @@ rads{1}=rad;
 Vexs{1}=Vex;
 
 
-[xep, rep, rad, Vex] = setupNACAduct( naf, alpha, xoff, roff, dig1, dig2, dig34, flipaf, spacing );
+[xep, rep, rad, Vex] = setupNACAduct( naf, chord, alpha, xoff, roff, dig1, dig2, dig34, flipaf, spacing );
 
 % Index for Kutta condition
 jtelow = 1;
