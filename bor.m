@@ -11,6 +11,8 @@
 % drawplots        % Flag to draw plots and postprocess
 % xgrd             % X Grid points for velocity survey
 % rgrd             % R Grid points for velocity survey
+% xsl              % X Points to start streamlines
+% rsl              % R Points to start streamlines
 %
 % names{nseg};     % Component names for output
 % xepts{nseg};     % X Endpoints of panels
@@ -226,8 +228,6 @@ if( drawplots )
             end
         end
     end
-    xv = xv( ~inv );
-    rv = rv( ~inv );
 
     uv = W * ones( size(xv) );
     vv = zeros( size(xv) );
@@ -239,6 +239,14 @@ if( drawplots )
             vv = vv + vj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
         end
     end
+
+    ug = reshape( uv, size(xg) );
+    vg = reshape( vv, size(xg) );
+
+    xv = xv( ~inv );
+    rv = rv( ~inv );
+    uv = uv( ~inv );
+    vv = vv( ~inv );
 
     Cedg = [];
 
@@ -312,6 +320,16 @@ if( drawplots )
     axis equal
     view(0,90)
     title('Cp')
+
+    figure(7)
+    [sl] = stream2( xg, rg, ug, vg, xsl, rsl, [0.01 1e6] );
+    streamline(sl)
+    hold on
+    for iseg=1:nseg
+        plot( xepts{iseg}, repts{iseg} );
+    end
+    hold off
+    axis equal
 
 end
 

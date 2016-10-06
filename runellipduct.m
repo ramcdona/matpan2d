@@ -11,6 +11,11 @@ xgrd = linspace( -1.5, 2, 35 );
 rgrd = linspace( 0, 1.5, 25 );
 rgrd(1) = 1e-3;
 
+nsl = 21;
+rsl = linspace( 0, rgrd(end), nsl);
+rsl(1) = [];
+xsl = min(xgrd) * ones( size(rsl) );
+
 drawplots = true;
 
 % Construct an ellipse

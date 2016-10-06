@@ -11,6 +11,11 @@ xgrd = linspace( -1, 2, 31 );
 rgrd = linspace( 0, 1, 21 );
 rgrd(1) = 1e-3;
 
+nsl = 11;
+rsl = linspace( 0, rgrd(end), nsl);
+rsl(1) = [];
+xsl = min(xgrd) * ones( size(rsl) );
+
 drawplots = true;
 
 % 1 -- Sphere
