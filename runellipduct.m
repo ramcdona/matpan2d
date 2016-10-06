@@ -14,7 +14,8 @@ rgrd(1) = 1e-3;
 nsl = 21;
 rsl = linspace( 0, rgrd(end), nsl);
 rsl(1) = [];
-xsl = min(xgrd) * ones( size(rsl) );
+xsl = min(xgrd) * ones( size(rsl) ) + .01;
+streamback = false;
 
 drawplots = true;
 

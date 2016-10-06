@@ -13,6 +13,7 @@
 % rgrd             % R Grid points for velocity survey
 % xsl              % X Points to start streamlines
 % rsl              % R Points to start streamlines
+% streamback       % Flag to trace streamlines backwards
 %
 % names{nseg};     % Component names for output
 % xepts{nseg};     % X Endpoints of panels
@@ -322,14 +323,38 @@ if( drawplots )
     title('Cp')
 
     figure(7)
-    [sl] = stream2( xg, rg, ug, vg, xsl, rsl, [0.01 1e6] );
-    streamline(sl)
+    verbose = 0;  % flag to report progress
+    maxits = 1e3; % maximum number of iterations
+    Ltol = 0.01;  % flowpath "out-of-triangle" tolerance
+    dLtol = 0.5;  % flowpath "curvature" tolerance
+
+    if( streamback )
+        FlowP = TriStream( tri, xv, rv, -uv, -vv, xsl, rsl, verbose, maxits, Ltol, dLtol );
+    else
+        FlowP = TriStream( tri, xv, rv, uv, vv, xsl, rsl, verbose, maxits, Ltol, dLtol );
+    end
+    PlotTriStream( FlowP );
     hold on
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg} );
     end
+    plot( xgrd, zeros(size(xgrd)),'k');
     hold off
     axis equal
+
+    figure(8)
+    trisurf( tri(IO,:), xv, rv, zeros(size(xv)), Vmagv, 'LineStyle', 'none' );
+    hold on
+    PlotTriStream( FlowP, 'k' );
+    hold on;  % PlotTriStream turns hold off.
+    for iseg=1:nseg
+        plot( xepts{iseg}, repts{iseg},'k' );
+    end
+    plot( xgrd, zeros(size(xgrd)),'k');
+    hold off
+    axis equal
+    view(0,90)
+    title('v/Vinf')
 
 end
 
