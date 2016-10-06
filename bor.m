@@ -161,25 +161,27 @@ end
 
 if( drawplots )
 
-% Post-process
-figure(2)
-clf
-hold on
-for iseg=1:nseg
-    plot( xcp{iseg}, gammas{iseg}, 'o-' )
-    plot( xcp{iseg}, Vexs{iseg} )
-end
-hold off
-ylabel('v/Vinf')
+    % Post-process
+    figure(2)
+    clf
+    hold on
+    for iseg=1:nseg
+        plot( xcp{iseg}, gammas{iseg}, 'o-' )
+        plot( xcp{iseg}, Vexs{iseg} )
+    end
+    hold off
+    ylabel('v/Vinf')
 
-figure(3)
-clf
-hold on
-for iseg=1:nseg
-    plot( xcp{iseg}, -Cp{iseg} );
+    figure(3)
+    clf
+    hold on
+    for iseg=1:nseg
+        plot( xcp{iseg}, -Cp{iseg} );
+    end
+    hold off
+    ylabel('-C_p')
+
 end
-hold off
-ylabel('-C_p')
 
 % Calculate maximum error for cases with exact isolated solution
 for iseg=1:nseg
@@ -355,7 +357,5 @@ if( drawplots )
     axis equal
     view(0,90)
     title('v/Vinf')
-
-end
 
 end
