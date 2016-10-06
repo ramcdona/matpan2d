@@ -60,7 +60,7 @@ queue=1:Npaths;
 for its=1:maxits
     
     % find containing triangle
-    TRI = tsearch(x,y,tri',Xbeg,Ybeg);
+    TRI = tsearchn([x; y]',tri',[Xbeg; Ybeg]');
 
     % remove completed flowpaths from queue
     done=find(isnan(TRI)); TRI(done)=[]; Xbeg(done)=[]; Ybeg(done)=[];
