@@ -8,7 +8,7 @@ Sref = 1.0;
 
 % Velocity survey vectors
 xgrd = unique( [-10:2:-2 -2:.1:2 2:2:120 120:.1:135 135:2:140]);
-rgrd = unique( [0:.1:1 1:.2:2 2:.5:10 10:1:20] );
+rgrd = unique( [0:.1:1.5 1.5:.25:2.5 2.5:.1:4 4:.5:10 10:1:20] );
 rgrd = rgrd + (pi-3)/1000;  % Offset by small non-round number.
 
 nsl = 21;

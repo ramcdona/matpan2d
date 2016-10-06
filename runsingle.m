@@ -9,11 +9,11 @@ Sref = 1.0;
 % Velocity survey vectors
 xgrd = linspace( -1, 2, 31 );
 rgrd = linspace( 0, 1, 21 );
-rgrd(1) = 1e-3;
+rgrd = rgrd + (pi-3)/1000;  % Offset by small non-round number.
 
 nsl = 11;
 rsl = linspace( 0, rgrd(end), nsl);
-rsl(1) = [];
+rsl(1) = 1e-3;
 xsl = min(xgrd) * ones( size(rsl) ) + 0.01;
 streamback = false;
 
@@ -23,7 +23,7 @@ drawplots = true;
 % 2 -- BOR with aft cone
 % 3 -- Ellipsoid
 % 4 -- NACA 4-Digit duct
-runcase = 3;
+runcase = 1;
 
 % Default to no kutta condition, turn on inside runcase setup.
 kutta = false;

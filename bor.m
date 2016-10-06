@@ -324,7 +324,7 @@ if( drawplots )
 
     figure(7)
     verbose = 0;  % flag to report progress
-    maxits = 1e3; % maximum number of iterations
+    maxits = 1e4; % maximum number of iterations
     Ltol = 0.01;  % flowpath "out-of-triangle" tolerance
     dLtol = 0.5;  % flowpath "curvature" tolerance
 
