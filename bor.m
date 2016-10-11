@@ -102,6 +102,14 @@ rhs = [];
 for iseg=1:nseg
     if ( ~props{iseg} ) % 'Normal' components
         rhss{iseg} = -W * cos( theta{iseg} );
+
+        for jseg=1:nseg
+            if ( props{jseg} )
+                [ uj, vj ] = tubevortex( xepts{jseg}(2), repts{jseg}(2), xcp{iseg}, rcp{iseg} );
+                rhss{iseg} = rhss{iseg} - gammaad{jseg} * ( uj .* cos( theta{iseg} ) + vj .* sin( theta{iseg} ) );
+            end
+        end
+
         rhs = [rhs  rhss{iseg}];
     end
 end
@@ -256,6 +264,10 @@ if( drawplots )
                 uv = uv + uj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
                 vv = vv + vj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
             end
+        else
+            [ uj, vj ] = tubevortex( xepts{iseg}(2), repts{iseg}(2), xv, rv );
+            uv = uv + uj * gammaad{iseg};
+            vv = vv + vj * gammaad{iseg};
         end
     end
 
