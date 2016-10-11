@@ -16,9 +16,11 @@
 % streamback       % Flag to trace streamlines backwards
 %
 % names{nseg};     % Component names for output
-% xepts{nseg};     % X Endpoints of panels
-% repts{nseg};     % R Endpoints of panels
+% xepts{nseg};     % X Endpoints of panels (or initial streamtube)
+% repts{nseg};     % R Endpoints of panels (or initial streamtube)
 % kuttas{nseg};    % Flags to apply Kutta condition to each body
+% props{nseg};     % Flag to treat body as actuator disk
+% gammaads{nseg};  % Initial actuator disk strength vector
 % jtels{nseg};     % Index to TE lower panel
 % jteus{nseg};     % Index to TE upper panel
 % rads{nseg};      % Panel radius of curvature vector
@@ -52,8 +54,12 @@ for iseg=1:nseg
     xcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
     rcp{iseg} = 0.5 * ( rep(2:end) + rep(1:end-1) );     % Panel r center point
 
-    npans{iseg} = length( xcp{iseg} );
-    npan = npan + npans{iseg};
+    if ( ~props{iseg} ) % 'Normal' components
+        npans{iseg} = length( xcp{iseg} );
+        npan = npan + npans{iseg};
+    else % Actuator disk doesn't contribute panels
+        npans{iseg} = 0;
+    end
 end
 
 
@@ -94,8 +100,10 @@ end
 % Setup & Assemble RHS
 rhs = [];
 for iseg=1:nseg
-    rhss{iseg} = -W * cos( theta{iseg} );
-    rhs = [rhs  rhss{iseg}];
+    if ( ~props{iseg} ) % 'Normal' components
+        rhss{iseg} = -W * cos( theta{iseg} );
+        rhs = [rhs  rhss{iseg}];
+    end
 end
 
 % Assemble AIC from cell matrices.
@@ -141,7 +149,11 @@ gamma = AIC \ rhs';
 
 % Break gamma vector into per-body parts
 for iseg=1:nseg
-    gam = gamma( modidx(1,:) == iseg );
+    if( ~props{iseg} )
+        gam = gamma( modidx(1,:) == iseg );
+    else
+        gam = 0;
+    end
 
     % Put kutta condition back on for plotting and post-processing.
     if ( kuttas{iseg} )
@@ -216,18 +228,20 @@ if( drawplots )
     inv = zeros( size(xv) );
 
     for iseg=1:nseg
-        xep = xepts{iseg};
-        rep = repts{iseg};
+        if( ~props{iseg} )
+            xep = xepts{iseg};
+            rep = repts{iseg};
 
-        % Forces open polys to be closed
-        % Signed minimum distance -- negative is inside.
-        [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, rv, xep, rep, true );
+            % Forces open polys to be closed
+            % Signed minimum distance -- negative is inside.
+            [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, rv, xep, rep, true );
 
-        % Loop to compare to nearby edge length.  Velocity survey has
-        % problems within one edge length of body
-        for i=1:length( inv )
-            if ( idx_c(i) < length( ds{iseg} ) && idx_c(i) > 0 )
-                inv(i) = inv(i) | ( dmin(i) < ds{iseg}(idx_c(i) ) );
+            % Loop to compare to nearby edge length.  Velocity survey has
+            % problems within one edge length of body
+            for i=1:length( inv )
+                if ( idx_c(i) < length( ds{iseg} ) && idx_c(i) > 0 )
+                    inv(i) = inv(i) | ( dmin(i) < ds{iseg}(idx_c(i) ) );
+                end
             end
         end
     end
@@ -235,11 +249,13 @@ if( drawplots )
     uv = W * ones( size(xv) );
     vv = zeros( size(xv) );
     for iseg=1:nseg
-        % i loop over survey points implied by . operations
-        for j = 1:npans{iseg}  % Loop over vortex j
-            [ uj, vj ] = ringvortex( xcp{iseg}(j), rcp{iseg}(j), xv, rv );
-            uv = uv + uj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
-            vv = vv + vj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
+        if( ~props{iseg} )
+            % i loop over survey points implied by . operations
+            for j = 1:npans{iseg}  % Loop over vortex j
+                [ uj, vj ] = ringvortex( xcp{iseg}(j), rcp{iseg}(j), xv, rv );
+                uv = uv + uj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
+                vv = vv + vj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
+            end
         end
     end
 
@@ -254,34 +270,36 @@ if( drawplots )
     Cedg = [];
 
     for iseg=1:nseg
-        nnext = length(xv) + 1;
-        mcon = length(xcp{iseg}) - 1;
+        if( ~props{iseg} )
+            nnext = length(xv) + 1;
+            mcon = length(xcp{iseg}) - 1;
 
-        % Body on center line
-        if ( abs(repts{iseg}(1)) < 1e-6 )
-            xv = [xv xepts{iseg}(1)];
-            rv = [rv repts{iseg}(1)];
-            uv = [uv 0];
-            vv = [vv 0];
-            mcon = mcon + 1;
+            % Body on center line
+            if ( abs(repts{iseg}(1)) < 1e-6 )
+                xv = [xv xepts{iseg}(1)];
+                rv = [rv repts{iseg}(1)];
+                uv = [uv 0];
+                vv = [vv 0];
+                mcon = mcon + 1;
+            end
+
+            xv = [xv xcp{iseg}];
+            rv = [rv rcp{iseg}];
+
+            uv = [uv gammas{iseg}' .* cos( theta{iseg} ) .* sign(dx{iseg}) ];
+            vv = [vv gammas{iseg}' .* sin( theta{iseg} ) .* sign(dx{iseg}) ];
+
+            % Body on center line
+            if ( abs(repts{iseg}(end)) < 1e-6 )
+                xv = [xv xepts{iseg}(end)];
+                rv = [rv repts{iseg}(end)];
+                uv = [uv 0];
+                vv = [vv 0];
+                mcon = mcon + 1;
+            end
+
+            Cedg = [Cedg [ nnext:nnext+mcon; nnext+1:nnext+mcon nnext ] ];
         end
-
-        xv = [xv xcp{iseg}];
-        rv = [rv rcp{iseg}];
-
-        uv = [uv gammas{iseg}' .* cos( theta{iseg} ) .* sign(dx{iseg}) ];
-        vv = [vv gammas{iseg}' .* sin( theta{iseg} ) .* sign(dx{iseg}) ];
-
-        % Body on center line
-        if ( abs(repts{iseg}(end)) < 1e-6 )
-            xv = [xv xepts{iseg}(end)];
-            rv = [rv repts{iseg}(end)];
-            uv = [uv 0];
-            vv = [vv 0];
-            mcon = mcon + 1;
-        end
-
-        Cedg = [Cedg [ nnext:nnext+mcon; nnext+1:nnext+mcon nnext ] ];
     end
 
     DT = delaunayTriangulation( xv', rv', Cedg' );
