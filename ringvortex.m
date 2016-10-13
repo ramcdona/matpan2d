@@ -17,6 +17,8 @@ B = x.^2 + ( r - 1.0 ).^2;
 % Matlab's elliptic integral routine is done in terms of M, where M=k^2
 ksq = 4.0 * r ./ A;
 [K,E] = ellipke( ksq );
+% External routine, slightly slower than built-in.
+% [K,E] = lellipke( ksq );
 
 u =  - 1.0 ./ ( 2.0 * pi * rn .* sqrt( A ) ) .* ( K - ( 1.0 + 2.0 * ( r - 1.0 ) ./ B ) .* E );
 v = (x./r) ./ ( 2.0 * pi * rn .* sqrt( A ) ) .* ( K - ( 1.0 + 2.0 * r ./ B ) .* E );

@@ -22,11 +22,14 @@ C = x.^2 + ( r + 1.0 ).^2;
 
 % Matlab's elliptic integral routine is done in terms of M, where M=k^2
 ksq = 4.0 * r ./ C;
-[K,E] = ellipke( ksq );
-
 n = ( 4.0 * r ) ./ ( r + 1.0 ).^2;
 
-PI = ellipticPi( n, ksq );
+% Built-in Matlab routines
+% [K,E] = ellipke( ksq );
+% PI = ellipticPi( n, ksq );
+
+% External routine (much faster for Pi)
+[K,E,PI]= lellipkepi( ksq, n );
 
 v = 2.0 ./ ( pi .* ksq .* sqrt( C ) ) .* ( E - K .* (1.0 - ksq ./ 2 ) );
 
