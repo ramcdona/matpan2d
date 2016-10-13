@@ -302,7 +302,7 @@ if( drawplots )
 
 
     figure(5)
-    trisurf( tri(IO,:), xv, rv, Vmagv, 'LineStyle', 'none' );
+    trisurf( tri(IO,:), xv, rv, Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg} );
@@ -314,7 +314,7 @@ if( drawplots )
 
 
     figure(6)
-    trisurf( tri(IO,:), xv, rv, Cpv, 'LineStyle', 'none' );
+    trisurf( tri(IO,:), xv, rv, Cpv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg} );
@@ -345,7 +345,7 @@ if( drawplots )
     axis equal
 
     figure(8)
-    trisurf( tri(IO,:), xv, rv, zeros(size(xv)), Vmagv, 'LineStyle', 'none' );
+    trisurf( tri(IO,:), xv, rv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     PlotTriStream( FlowP, 'k' );
     hold on;  % PlotTriStream turns hold off.

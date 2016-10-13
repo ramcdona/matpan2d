@@ -68,7 +68,7 @@ axis equal
 
 
 figure(5)
-trisurf( tri, xv, rv, Vmagv, 'LineStyle', 'none' );
+trisurf( tri, xv, rv, Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
 hold on
 plot([0 0],[0 1],'k')
 PlotTriStream( streamtube );
@@ -79,7 +79,7 @@ title('v/Vinf')
 
 
 figure(6)
-trisurf( tri, xv, rv, Cpv, 'LineStyle', 'none' );
+trisurf( tri, xv, rv, Cpv, 'LineStyle', 'none', 'FaceColor', 'interp' );
 hold on
 plot([0 0],[0 1],'k')
 PlotTriStream( streamtube );
@@ -98,7 +98,7 @@ hold off
 axis equal
 
 figure(8)
-trisurf( tri, xv, rv, zeros(size(xv)), Vmagv, 'LineStyle', 'none' );
+trisurf( tri, xv, rv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
 hold on
 plot([0 0],[0 1],'k')
 PlotTriStream( streamtube );
