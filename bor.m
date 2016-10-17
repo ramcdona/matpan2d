@@ -314,9 +314,15 @@ if( drawplots )
         end
     end
 
-    DT = delaunayTriangulation( xv', rv', Cedg' );
-    tri = DT.ConnectivityList;
-    IO = ~isInterior(DT);
+    if( isempty(Cedg) )
+        DT = delaunayTriangulation( xv', rv' );
+        tri = DT.ConnectivityList;
+        IO = true( size( tri, 1 ), 1 );
+    else
+        DT = delaunayTriangulation( xv', rv', Cedg' );
+        tri = DT.ConnectivityList;
+        IO = ~isInterior(DT);
+    end
 
     Vmagv = sqrt(uv.^2+vv.^2);
     Cpv = 1 - Vmagv.^2;
