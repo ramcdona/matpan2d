@@ -36,4 +36,9 @@ v = 2.0 ./ ( pi .* ksq .* sqrt( C ) ) .* ( E - K .* (1.0 - ksq ./ 2 ) );
 u = zeros( size (v) );
 u( ~reqone ) = 1.0 ./ ( 2.0 * pi ) .* ( A(~reqone) + ( x(~reqone) ./ sqrt( C(~reqone) ) ) .* ( K(~reqone) - PI(~reqone) .* ( r(~reqone) - 1.0 ) ./ ( r(~reqone) + 1.0 ) ) );
 u( reqone ) = 0.25 + x(reqone) .* K(reqone) ./ ( 2.0 * pi .* sqrt( x(reqone).^2 + 4.0 ) );
+
+u( isnan(u) ) = 0.25;
+v( isnan(v) ) = -(1+pi/2);
+v( v < -(1+pi/2) ) = -(1+pi/2);
+
 end
