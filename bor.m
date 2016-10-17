@@ -97,23 +97,6 @@ for iseg=1:nseg
     end
 end
 
-% Setup & Assemble RHS
-rhs = [];
-for iseg=1:nseg
-    if ( ~props{iseg} ) % 'Normal' components
-        rhss{iseg} = -W * cos( theta{iseg} );
-
-        for jseg=1:nseg
-            if ( props{jseg} )
-                [ uj, vj ] = tubevortex( xepts{jseg}(2), repts{jseg}(2), xcp{iseg}, rcp{iseg} );
-                rhss{iseg} = rhss{iseg} - gammaad{jseg} * ( uj .* cos( theta{iseg} ) + vj .* sin( theta{iseg} ) );
-            end
-        end
-
-        rhs = [rhs  rhss{iseg}];
-    end
-end
-
 % Assemble AIC from cell matrices.
 AIC=[];
 panidx=[];
@@ -131,7 +114,7 @@ end
 idx = [segidx; panidx; 1:npan];
 modidx = idx;
 
-
+% Apply Kutta condition to AIC
 for iseg=1:nseg
     if ( kuttas{iseg} )
         jtelow = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jtels{iseg} ) );
@@ -143,12 +126,37 @@ for iseg=1:nseg
         AIC(jtelow,:) = AIC(jtelow,:) - AIC(jteup,:);
         AIC(jteup,:)=[];
 
+        % Remove index rows to match
+        modidx(:,jteup)=[];
+    end
+end
+
+% Setup & Assemble RHS
+rhs = [];
+for iseg=1:nseg
+    if ( ~props{iseg} ) % 'Normal' components
+        rhss{iseg} = -W * cos( theta{iseg} );
+
+        for jseg=1:nseg
+            if ( props{jseg} )
+                [ uj, vj ] = tubevortex( xepts{jseg}(2), repts{jseg}(2), xcp{iseg}, rcp{iseg} );
+                rhss{iseg} = rhss{iseg} - gammaad{jseg} * ( uj .* cos( theta{iseg} ) + vj .* sin( theta{iseg} ) );
+            end
+        end
+
+        rhs = [rhs  rhss{iseg}];
+    end
+end
+
+% Apply Kutta condition to RHS
+for iseg=1:nseg
+    if ( kuttas{iseg} )
+        jtelow = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jtels{iseg} ) );
+        jteup = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jteus{iseg} ) );
+
         % Apply Kutta condition to RHS
         rhs(:,jtelow) = rhs(:,jtelow) - rhs(:,jteup);
         rhs(:,jteup)=[];
-
-        % Remove index rows to match
-        modidx(:,jteup)=[];
     end
 end
 
