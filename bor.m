@@ -70,28 +70,30 @@ for iseg=1:nseg
 
         AICij = nan( npans{jseg}, npans{iseg} );
 
-        % i loop over panels implied by . operations
-        for j = 1:npans{iseg}  % Loop over vortex j
-            [ uj, vj ] = ringvortex( xcp{iseg}(j), rcp{iseg}(j), xcp{jseg}, rcp{jseg} );
-            AICij(:,j) = ( uj .* cos( theta{jseg} ) + vj .* sin( theta{jseg} ) ) .* ds{iseg}(j);
-        end
+        if ( ~props{iseg} && ~props{jseg} )
 
-        if ( iseg == jseg )
-            C = 4.0 * pi * rcp{iseg} ./ ds{iseg};
-            curve = ds{iseg} ./ ( 4.0 * pi * rads{iseg} );
-
-            % Self influence term
-            AICii = -0.5 - ( log( 2.0 * C ) - 0.25 ) ./ C .* cos( theta{iseg} ) + curve;
-            % Excessively clever way to substitute the matrix diagonal.
-            AICij( 1 : npans{iseg} + 1 : npans{iseg} * npans{iseg} ) = AICii;
-
-            if ( kuttas{iseg} )
-                % Correction term for back-diagonal
-                for j = 1:npans{iseg} % Loop over column j
-                    AICij(j,j) = - ( sum( AICij(:,j) .* ds{iseg}' ) - AICij(j,j) * ds{iseg}(j) ) / ds{iseg}(j);
-                end
+            % i loop over panels implied by . operations
+            for j = 1:npans{iseg}  % Loop over vortex j
+                [ uj, vj ] = ringvortex( xcp{iseg}(j), rcp{iseg}(j), xcp{jseg}, rcp{jseg} );
+                AICij(:,j) = ( uj .* cos( theta{jseg} ) + vj .* sin( theta{jseg} ) ) .* ds{iseg}(j);
             end
 
+            if ( iseg == jseg )
+                C = 4.0 * pi * rcp{iseg} ./ ds{iseg};
+                curve = ds{iseg} ./ ( 4.0 * pi * rads{iseg} );
+
+                % Self influence term
+                AICii = -0.5 - ( log( 2.0 * C ) - 0.25 ) ./ C .* cos( theta{iseg} ) + curve;
+                % Excessively clever way to substitute the matrix diagonal.
+                AICij( 1 : npans{iseg} + 1 : npans{iseg} * npans{iseg} ) = AICii;
+
+                if ( kuttas{iseg} )
+                    % Correction term for back-diagonal
+                    for j = 1:npans{iseg} % Loop over column j
+                        AICij(j,j) = - ( sum( AICij(:,j) .* ds{iseg}' ) - AICij(j,j) * ds{iseg}(j) ) / ds{iseg}(j);
+                    end
+                end
+            end
         end
 
         AICs{iseg, jseg} = AICij;
