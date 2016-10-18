@@ -12,6 +12,9 @@ W = 1.0;
 
 CT = 5;
 
+% Estimated cruise CT
+% CT = 177.889/204.99;
+
 % Calculate vortex tube strength and eventual jet velocity
 gammainf = W * ( sqrt( CT + 1 ) - 1 );
 Wjinf = W + gammainf;
