@@ -14,6 +14,7 @@
 % xsl              % X Points to start streamlines
 % rsl              % R Points to start streamlines
 % streamback       % Flag to trace streamlines backwards
+% ntstep           % Number of streamtube relaxation steps
 %
 % names{nseg};     % Component names for output
 % xepts{nseg};     % X Endpoints of panels (or initial streamtube)
@@ -131,61 +132,64 @@ for iseg=1:nseg
     end
 end
 
-% Setup & Assemble RHS
-rhs = [];
-for iseg=1:nseg
-    if ( ~props{iseg} ) % 'Normal' components
-        rhss{iseg} = -W * cos( theta{iseg} );
+for itstep=1:ntstep
 
-        for jseg=1:nseg
-            if ( props{jseg} )
-                [ uj, vj ] = tubevortex( xepts{jseg}(2), repts{jseg}(2), xcp{iseg}, rcp{iseg} );
-                rhss{iseg} = rhss{iseg} - gammaad{jseg} * ( uj .* cos( theta{iseg} ) + vj .* sin( theta{iseg} ) );
+    % Setup & Assemble RHS
+    rhs = [];
+    for iseg=1:nseg
+        if ( ~props{iseg} ) % 'Normal' components
+            rhss{iseg} = -W * cos( theta{iseg} );
+
+            for jseg=1:nseg
+                if ( props{jseg} )
+                    [ uj, vj ] = tubevortex( xepts{jseg}(2), repts{jseg}(2), xcp{iseg}, rcp{iseg} );
+                    rhss{iseg} = rhss{iseg} - gammaad{jseg} * ( uj .* cos( theta{iseg} ) + vj .* sin( theta{iseg} ) );
+                end
             end
+
+            rhs = [rhs  rhss{iseg}];
+        end
+    end
+
+    % Apply Kutta condition to RHS
+    for iseg=1:nseg
+        if ( kuttas{iseg} )
+            jtelow = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jtels{iseg} ) );
+            jteup = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jteus{iseg} ) );
+
+            % Apply Kutta condition to RHS
+            rhs(:,jtelow) = rhs(:,jtelow) - rhs(:,jteup);
+            rhs(:,jteup)=[];
+        end
+    end
+
+    % Solve (gamma is tangental velocity at control points)
+    gamma = AIC \ rhs';
+
+    % Break gamma vector into per-body parts
+    for iseg=1:nseg
+        if( ~props{iseg} )
+            gam = gamma( modidx(1,:) == iseg );
+        else
+            gam = 0;
         end
 
-        rhs = [rhs  rhss{iseg}];
+        % Put kutta condition back on for plotting and post-processing.
+        if ( kuttas{iseg} )
+            jtelow = jtels{iseg};
+            jteup = jteus{iseg};
+
+            gam = [gam(1:jteup-1); -gam(jtelow); gam(jteup+1:end)];
+        end
+
+        % Flip reversed panel velocities for plotting
+        gam = gam .* sign(dx{iseg})';
+
+        gammas{iseg} = gam;
+        Cp{iseg} = 1 - gam.^2;
     end
+
 end
-
-% Apply Kutta condition to RHS
-for iseg=1:nseg
-    if ( kuttas{iseg} )
-        jtelow = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jtels{iseg} ) );
-        jteup = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jteus{iseg} ) );
-
-        % Apply Kutta condition to RHS
-        rhs(:,jtelow) = rhs(:,jtelow) - rhs(:,jteup);
-        rhs(:,jteup)=[];
-    end
-end
-
-% Solve (gamma is tangental velocity at control points)
-gamma = AIC \ rhs';
-
-% Break gamma vector into per-body parts
-for iseg=1:nseg
-    if( ~props{iseg} )
-        gam = gamma( modidx(1,:) == iseg );
-    else
-        gam = 0;
-    end
-
-    % Put kutta condition back on for plotting and post-processing.
-    if ( kuttas{iseg} )
-        jtelow = jtels{iseg};
-        jteup = jteus{iseg};
-
-        gam = [gam(1:jteup-1); -gam(jtelow); gam(jteup+1:end)];
-    end
-
-    % Flip reversed panel velocities for plotting
-    gam = gam .* sign(dx{iseg})';
-
-    gammas{iseg} = gam;
-    Cp{iseg} = 1 - gam.^2;
-end
-
 
 if( drawplots )
 
