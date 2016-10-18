@@ -7,6 +7,7 @@
 %
 % There may be multiple input bodies/objects, each an item in a cell array.
 %
+% W                % Freestream velocity
 % Sref             % Reference area for calculating CD
 % drawplots        % Flag to draw plots and postprocess
 % xgrd             % X Grid points for velocity survey
@@ -19,9 +20,12 @@
 % names{nseg};     % Component names for output
 % xepts{nseg};     % X Endpoints of panels (or initial streamtube)
 % repts{nseg};     % R Endpoints of panels (or initial streamtube)
+% remin{nseg};     % R Minimum for relaxed streamtube
+% remax{nseg};     % R Maximum for relaxed streamtube
 % kuttas{nseg};    % Flags to apply Kutta condition to each body
 % props{nseg};     % Flag to treat body as actuator disk
 % gammaads{nseg};  % Initial actuator disk strength vector
+% Wjad{nseg};      % Far downstream disk jet velocity
 % jtels{nseg};     % Index to TE lower panel
 % jteus{nseg};     % Index to TE upper panel
 % rads{nseg};      % Panel radius of curvature vector
@@ -134,7 +138,38 @@ for iseg=1:nseg
     end
 end
 
+opts = odeset;
+opts = odeset( opts, 'Events', @bormassevt );
+opts = odeset( opts, 'AbsTol', 1e-5, 'RelTol', 1e-2);
+
 for itstep=1:ntstep
+
+    rerr = 0;
+
+    % Re-process actuator disk geometry
+    for iseg=1:nseg
+        if( props{iseg} )
+            xep = xepts{iseg};
+            rep = repts{iseg};
+            rmin = remin{iseg};
+            rmax = remax{iseg};
+
+            % Limit streamtube radius
+            rep( rep < rmin ) = rmin( rep < rmin );
+            rep( rep > rmax ) = rmax( rep > rmax );
+
+            % Store limited streamtube
+            repts{iseg} = rep;
+
+            dx{iseg} = xep(2:end) - xep(1:end-1);
+            dr{iseg} = rep(2:end) - rep(1:end-1);
+
+            ds{iseg} = sqrt( dx{iseg}.^2 + dr{iseg}.^2 );        % Panel arclength
+            theta{iseg} = atan2( dr{iseg}, dx{iseg} );           % Panel slope angle
+            xcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+            rcp{iseg} = 0.5 * ( rep(2:end) + rep(1:end-1) );     % Panel r center point
+        end
+    end
 
     % Setup & Assemble RHS
     rhs = [];
@@ -144,8 +179,19 @@ for itstep=1:ntstep
 
             for jseg=1:nseg
                 if ( props{jseg} )
+
+                    uad = zeros( size( xcp{iseg} ) );
+                    vad = uad;
+                    for j = 1:length( xcp{iseg} )  % Loop over vortex j
+                        [ uj, vj ] = ringvortex( xcp{jseg}(j), rcp{jseg}(j), xcp{iseg}, rcp{iseg} );
+                        uad = uad - uj * gammas{jseg}(j) * ds{jseg}(j);
+                        vad = vad - vj * gammas{jseg}(j) * ds{jseg}(j);
+                    end
+
                     [ uj, vj ] = tubevortex( xepts{jseg}(2), repts{jseg}(2), xcp{iseg}, rcp{iseg} );
-                    rhss{iseg} = rhss{iseg} - gammaad{jseg} * ( uj .* cos( theta{iseg} ) + vj .* sin( theta{iseg} ) );
+                    uad = uad + gammas{jseg}(end) * uj;
+                    vad = vad + gammas{jseg}(end) * vj;
+                    rhss{iseg} = rhss{iseg} - ( uad .* cos( theta{iseg} ) + vad .* sin( theta{iseg} ) );
                 end
             end
 
@@ -172,23 +218,52 @@ for itstep=1:ntstep
     for iseg=1:nseg
         if( ~props{iseg} )
             gam = gamma( modidx(1,:) == iseg );
+
+            % Put kutta condition back on for plotting and post-processing.
+            if ( kuttas{iseg} )
+                jtelow = jtels{iseg};
+                jteup = jteus{iseg};
+
+                gam = [gam(1:jteup-1); -gam(jtelow); gam(jteup+1:end)];
+            end
+
+            % Flip reversed panel velocities for plotting
+            gam = gam .* sign(dx{iseg})';
+
+            gammas{iseg} = gam';
+            Cp{iseg} = 1 - gam.^2;
+
         else
-            gam = 0;
+            gammas{iseg} = gammaad{iseg};
         end
+    end
 
-        % Put kutta condition back on for plotting and post-processing.
-        if ( kuttas{iseg} )
-            jtelow = jtels{iseg};
-            jteup = jteus{iseg};
 
-            gam = [gam(1:jteup-1); -gam(jtelow); gam(jteup+1:end)];
+    % Update streamtube shape
+    for iseg=1:nseg
+        if( props{iseg} )
+            % Integrate mass flow at disk
+            x0 = xepts{iseg}(1);
+            mass0 = inf;
+            [ rdist, mdist ] = ode45( @bordm, [0, repts{iseg}(1)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
+            mass0 = mdist(end);
+
+            % Set vortex tube radius based on jet velocity and mass flow
+            rt = sqrt( mass0 / ( pi * Wjad{iseg} ) );
+
+            % Find streamtube by continuity
+            rnew = repts{iseg};
+            for i = 2:length(xepts{iseg})-2
+                x0 = xpts(i);
+                [rdist, mdist, re] = ode45( @bordm, [0, remax{iseg}(i)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
+                rnew(i) = re;
+            end
+            % Force last two points to equal tube radius
+            rnew(end-1:end) = rt;
+
+            rerr = max( rerr, max( abs( repts{iseg} - rnew ) ) );
+            repts{iseg} = rnew;
         end
-
-        % Flip reversed panel velocities for plotting
-        gam = gam .* sign(dx{iseg})';
-
-        gammas{iseg} = gam;
-        Cp{iseg} = 1 - gam.^2;
     end
 
 end
@@ -200,8 +275,10 @@ if( drawplots )
     clf
     hold on
     for iseg=1:nseg
-        plot( xcp{iseg}, gammas{iseg}, 'o-' )
-        plot( xcp{iseg}, Vexs{iseg} )
+        if( ~props{iseg} )
+            plot( xcp{iseg}, gammas{iseg}, 'o-' )
+            plot( xcp{iseg}, Vexs{iseg} )
+        end
     end
     hold off
     ylabel('v/Vinf')
@@ -210,7 +287,9 @@ if( drawplots )
     clf
     hold on
     for iseg=1:nseg
-        plot( xcp{iseg}, -Cp{iseg} );
+        if( ~props{iseg} )
+            plot( xcp{iseg}, -Cp{iseg} );
+        end
     end
     hold off
     ylabel('-C_p')
@@ -220,7 +299,7 @@ end
 % Calculate maximum error for cases with exact isolated solution
 for iseg=1:nseg
     if ( ~isnan( Vexs{iseg}(1) ) )
-        err = Vexs{iseg} - gammas{iseg}';
+        err = Vexs{iseg} - gammas{iseg};
         disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
     end
 end
@@ -229,10 +308,13 @@ end
 CDi = [];
 CD = 0.0;
 for iseg=1:nseg
-    CDi{iseg} = - 2.0 * pi * sum( Cp{iseg}' .* sin( theta{iseg} ) .* rcp{iseg} .* ds{iseg} ) / Sref;
-    CD = CD + CDi{iseg};
+    if( ~props{iseg} )
 
-    disp(['CD on ' names{iseg} ':  ' num2str(CDi{iseg})])
+        CDi{iseg} = - 2.0 * pi * sum( Cp{iseg}' .* sin( theta{iseg} ) .* rcp{iseg} .* ds{iseg} ) / Sref;
+        CD = CD + CDi{iseg};
+
+        disp(['CD on ' names{iseg} ':  ' num2str(CDi{iseg})])
+    end
 end
 
 disp(['CD total:  ' num2str(CD)])
@@ -268,22 +350,7 @@ if( drawplots )
         end
     end
 
-    uv = W * ones( size(xv) );
-    vv = zeros( size(xv) );
-    for iseg=1:nseg
-        if( ~props{iseg} )
-            % i loop over survey points implied by . operations
-            for j = 1:npans{iseg}  % Loop over vortex j
-                [ uj, vj ] = ringvortex( xcp{iseg}(j), rcp{iseg}(j), xv, rv );
-                uv = uv + uj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
-                vv = vv + vj * gammas{iseg}(j) * ds{iseg}(j) * sign(dx{iseg}(j));
-            end
-        else
-            [ uj, vj ] = tubevortex( xepts{iseg}(2), repts{iseg}(2), xv, rv );
-            uv = uv + uj * gammaad{iseg};
-            vv = vv + vj * gammaad{iseg};
-        end
-    end
+    [uv, vv] = borvel( xv, rv, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props );
 
     ug = reshape( uv, size(xg) );
     vg = reshape( vv, size(xg) );
@@ -312,8 +379,8 @@ if( drawplots )
             xv = [xv xcp{iseg}];
             rv = [rv rcp{iseg}];
 
-            uv = [uv gammas{iseg}' .* cos( theta{iseg} ) .* sign(dx{iseg}) ];
-            vv = [vv gammas{iseg}' .* sin( theta{iseg} ) .* sign(dx{iseg}) ];
+            uv = [uv gammas{iseg} .* cos( theta{iseg} ) .* sign(dx{iseg}) ];
+            vv = [vv gammas{iseg} .* sin( theta{iseg} ) .* sign(dx{iseg}) ];
 
             % Body on center line
             if ( abs(repts{iseg}(end)) < 1e-6 )
