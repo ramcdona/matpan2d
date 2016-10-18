@@ -19,6 +19,8 @@ streamback = false;
 
 drawplots = true;
 
+ntstep = 1;
+
 % 1 -- Sphere
 % 2 -- BOR with aft cone
 % 3 -- Ellipsoid
@@ -103,17 +105,6 @@ jtels{1} = jtelow;
 jteus{1} = jteup;
 rads{1}=rad;
 Vexs{1}=Vex;
-
-names{2} = 'Disk';
-xepts{2} = 1.0 * [1 1];
-repts{2} = 0.5 * [0 1];
-kuttas{2} = false;
-props{2} = true;
-gammaad{2} = 5.0;
-jtels{2} = 0;
-jteus{2} = 0;
-rads{2} = 0;
-Vexs{2} = 0;
 
 % Execute script
 run('bor')
