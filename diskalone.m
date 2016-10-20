@@ -178,7 +178,7 @@ rv = [ rv rge ];
 
 % Petrurb points randomly to improve stability of unstructured streamline
 % tracing algorithm
-rv = abs( rv + rand(size(rv))*.001-.0005 ) + .001;
+rv = abs( rv + rand(size(rv))*.001-.0005 );
 
 % Survey velocity
 uv = W * ones( size(xv) );
