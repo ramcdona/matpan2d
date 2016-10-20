@@ -185,6 +185,7 @@ opts = odeset( opts, 'AbsTol', 1e-5, 'RelTol', 1e-2);
 for itstep=1:ntstep
 
     rerr = 0;
+    gerr = 0;
 
     % Re-process actuator disk geometry
     for iseg=1:nseg
@@ -279,6 +280,8 @@ for itstep=1:ntstep
     end
 
 
+    rnew = repts;
+    gammanew = gammas;
     % Update streamtube shape
     for iseg=1:nseg
         if( props{iseg} )
@@ -292,20 +295,40 @@ for itstep=1:ntstep
             rt = sqrt( mass0 / ( pi * Wjad{iseg} ) );
 
             % Find streamtube by continuity
-            rnew = repts{iseg};
             for i = 2:length(xepts{iseg})-2
                 x0 = xepts{iseg}(i);
-                rnew(i) = re;
                 [rdist, mdist, re] = ode45( @bordm, [remin{iseg}(i), remax{iseg}(i)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
+                rnew{iseg}(i) = re;
             end
             % Force last two points to equal tube radius
-            rnew(end-1:end) = rt;
+            rnew{iseg}(end-1:end) = rt;
 
-            rerr = max( rerr, max( abs( repts{iseg} - rnew ) ) );
-            repts{iseg} = rnew;
+            [upts, vpts] = borvel( xepts{iseg}, repts{iseg}, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props );
+
+            ucp = ( upts(2:end) + upts(1:end-1) ) * 0.5;
+            vcp = ( vpts(2:end) + vpts(1:end-1) ) * 0.5;
+            Vcp = sqrt( ucp.^2 + vcp.^2 );
+
+            gammainf = gammaad{iseg}(end);
+
+            % Calculate new strength via: (vs*gamma)=const
+            gammanew{iseg}(1:end-1) = ( gammainf * ( W - gammainf / 2 ) ) ./ Vcp;
+            % Force last two to equal tube strength
+            gammanew{iseg}(end-1:end) = gammainf;
+
+            rerr = max( rerr, max( abs( repts{iseg} - rnew{iseg} ) ) );
+            gerr = max( gerr, max( abs( gammas{iseg} - gammanew{iseg} ) ) );
+
+            gammaad{iseg} = gammanew{iseg};
         end
     end
 
+    repts = rnew;
+    gammas = gammanew;
+
+
+    rerrhist(itstep) = rerr;
+    gerrhist(itstep) = gerr;
 end
 
 if( drawplots )
@@ -333,6 +356,13 @@ if( drawplots )
     end
     hold off
     ylabel('-C_p')
+
+    figure(4)
+    semilogy( rerrhist, 'x-' )
+    hold on
+    semilogy( gerrhist, 'o-' )
+    legend( 'Streamtube residual', 'Gamma residual' )
+    hold off
 
 end
 
@@ -449,7 +479,7 @@ if( drawplots )
     Vmagv = sqrt(uv.^2+vv.^2);
     Cpv = 1 - Vmagv.^2;
 
-    figure(4)
+    figure(5)
     quiver( xv, rv, uv, vv )
     hold on
     for iseg=1:nseg
@@ -459,7 +489,7 @@ if( drawplots )
     axis equal
 
 
-    figure(5)
+    figure(6)
     trisurf( tri(IO,:), xv, rv, Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     for iseg=1:nseg
@@ -471,7 +501,7 @@ if( drawplots )
     title('v/Vinf')
 
 
-    figure(6)
+    figure(7)
     trisurf( tri(IO,:), xv, rv, Cpv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     for iseg=1:nseg
@@ -482,7 +512,7 @@ if( drawplots )
     view(0,90)
     title('Cp')
 
-    figure(7)
+    figure(8)
     verbose = 0;  % flag to report progress
     maxits = 1e4; % maximum number of iterations
     Ltol = 0.01;  % flowpath "out-of-triangle" tolerance
@@ -502,7 +532,7 @@ if( drawplots )
     hold off
     axis equal
 
-    figure(8)
+    figure(9)
     trisurf( tri(IO,:), xv, rv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     PlotTriStream( FlowP, 'k' );
