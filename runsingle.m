@@ -8,8 +8,15 @@ W = 1.0;
 Sref = 1.0;
 
 % Velocity survey vectors
-xgrd = linspace( -1, 2, 131 );
-rgrd = linspace( 0, 2, 121 );
+xgrd = linspace( -1.5, 1.5, 61 );
+xgrd = unique([-1.5:.1:7 -0.1:.01:0] );
+rgrd = linspace( 0, 3, 11 );
+rgrd = unique([0:0.01:0.5 0:.1:3 0.8:0.01:1.05 ]);
+
+xgrd = unique([-1.5:.05:7 0.4:.01:0.5 -.1:.01:.1] );
+rgrd = unique([0:0.01:.7 0:.1:3 ]);
+
+
 rgrd = rgrd + (pi-3)/1000;  % Offset by small non-round number.
 
 nsl = 23;
@@ -20,7 +27,7 @@ streamback = false;
 
 drawplots = true;
 
-ntstep = 1;
+ntstep = 7;
 
 % 1 -- Sphere
 % 2 -- BOR with aft cone
@@ -28,7 +35,6 @@ ntstep = 1;
 % 4 -- NACA 4-Digit duct
 % 5 -- Bontempo body
 runcase = 4;
-runcase = 1;
 
 % Default to no kutta condition, turn on inside runcase setup.
 kutta = false;
@@ -113,6 +119,55 @@ jtels{1} = jtelow;
 jteus{1} = jteup;
 rads{1}=rad;
 Vexs{1}=Vex;
+
+
+dCP = .75;
+
+% Disk radius
+rdisk = 1.0;
+% rdisk = 0.5;
+rdisk = 0.46;
+rdisk = 0.486144640095513 - 0.05;  % 'on' duct lower surface.
+% rdisk = 0.4128442572534;
+
+% Disk location
+% xstart = 1;
+% xstart = 1.0;
+xstart = 0.5;
+%xstart = 0.99619469809175;
+% xstart = 0.0;
+
+% End of contracting streamtube
+xend = 5;
+
+% Vortex ring spacing
+dxring = rdisk * 0.1;
+dxring = .05;
+
+% Number of vortex ring panels
+npan = ( xend - xstart ) / dxring;
+
+% Set up initial geometry
+xpts = linspace( xstart, xend, npan + 1 );
+rpts = rdisk * ones( size( xpts ) );
+
+% Set limits on streamtube dimensions
+rmin = zeros( size( rpts ) );
+rmax = 1.5 * ones( size( rpts ) );
+
+
+names{2} = 'Disk';
+xepts{2} = xpts;
+repts{2} = rpts;
+remin{2} = rmin;
+remax{2} = rmax;
+kuttas{2} = false;
+props{2} = true;
+deltaCP{2} = dCP;
+jtels{2} = 0;
+jteus{2} = 0;
+rads{2} = 0;
+Vexs{2} = 0;
 
 % Execute script
 run('bor')
