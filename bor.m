@@ -254,7 +254,7 @@ for itstep=1:ntstep
             % Find streamtube by continuity
             rnew = repts{iseg};
             for i = 2:length(xepts{iseg})-2
-                x0 = xpts(i);
+                x0 = xepts{iseg}(i);
                 rnew(i) = re;
                 [rdist, mdist, re] = ode45( @bordm, [remin{iseg}(i), remax{iseg}(i)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
             end
