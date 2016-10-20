@@ -9,7 +9,9 @@ Sref = 1.0;
 
 % Velocity survey vectors
 xgrd = linspace( -1, 6, 71 );
+xgrd = unique([-1:.1:6 -.5:.01:0] );
 rgrd = linspace( 0, 3, 31 );
+rgrd = unique([0:.1:3 0.75:0.01:1.1]);
 rgrd = rgrd + (pi-3)/1000;  % Offset by small non-round number.
 
 nsl = 11;
@@ -30,12 +32,12 @@ dCP = 5;
 rdisk = 1.0;
 
 % Disk location
-xstart = 2;
+xstart = 0;
 % End of contracting streamtube
 xend = 4;
 
 % Vortex ring spacing
-dxring = rdisk * 0.15;
+dxring = rdisk * 0.1;
 
 % Number of vortex ring panels
 npan = ( xend - xstart ) / dxring;
