@@ -346,6 +346,7 @@ if( drawplots )
                 if ( idx_c(i) < length( ds{iseg} ) && idx_c(i) > 0 )
                     inv(i) = inv(i) | ( dmin(i) < ds{iseg}(idx_c(i) ) );
                 end
+                inv(i) = inv(i) | ( dmin(i) < 0 );
             end
         end
     end
