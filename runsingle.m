@@ -25,6 +25,8 @@ ntstep = 1;
 % 2 -- BOR with aft cone
 % 3 -- Ellipsoid
 % 4 -- NACA 4-Digit duct
+% 5 -- Bontempo body
+runcase = 4;
 runcase = 1;
 
 % Default to no kutta condition, turn on inside runcase setup.
@@ -64,7 +66,7 @@ elseif (runcase == 3 )
     [xep, rep, rad, Vex] = setupellipsoid( ncirc, rada, radb, xcen );
     name = 'Ellipsoid';
 
-else
+elseif (runcase == 4 )
     naf = 51;
 
     chord = 1.0;
@@ -93,6 +95,11 @@ else
     kutta = true;
     name = ['NACA ' num2str(dig1) num2str(dig2) num2str(dig34) ' Duct'];
 
+else
+    npts = 151;
+
+    [xep, rep, rad, Vex] = setupbontempobody( npts );
+    name = 'Bontempo Body';
 end
 
 names{1} = name;
