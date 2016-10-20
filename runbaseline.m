@@ -18,6 +18,8 @@ streamback = false;
 
 drawplots = true;
 
+ntstep = 1;
+
 % Construct fuselage mesh
 
 % Construct a duct
@@ -54,7 +56,7 @@ xepts{1} = xfusegrid;
 repts{1} = rfusegrid;
 kuttas{1} = kutta;
 props{1} = false;
-gammaad{1} = 0.0;
+deltaCP{1} = 0.0;
 jtels{1} = jtelow;
 jteus{1} = jteup;
 rads{1} = inf(1,length(xfusegrid)-1);
@@ -74,7 +76,7 @@ xepts{2} = xep;
 repts{2} = rep;
 kuttas{2} = kutta;
 props{2} = false;
-gammaad{2} = 0.0;
+deltaCP{2} = 0.0;
 jtels{2} = jtelow;
 jteus{2} = jteup;
 rads{2}=rad;

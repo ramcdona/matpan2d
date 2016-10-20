@@ -23,11 +23,7 @@ drawplots = true;
 
 ntstep = 5;
 
-CT = 5;
-
-% Calculate vortex tube strength and eventual jet velocity
-gammainf = -W * ( sqrt( CT + 1 ) - 1 );
-Wjinf = W - gammainf;
+dCP = 5;
 
 
 % Disk radius
@@ -52,9 +48,6 @@ rpts = rdisk * ones( size( xpts ) );
 rmin = zeros( size( rpts ) );
 rmax = 1.5 * ones( size( rpts ) );
 
-gammadisk = gammainf * ones( size( xpts ) );
-
-
 
 names{1} = 'Disk';
 xepts{1} = xpts;
@@ -63,8 +56,7 @@ remin{1} = rmin;
 remax{1} = rmax;
 kuttas{1} = false;
 props{1} = true;
-gammaad{1} = gammadisk;
-Wjad{1} = Wjinf;
+deltaCP{1} = dCP;
 jtels{1} = 0;
 jteus{1} = 0;
 rads{1} = 0;

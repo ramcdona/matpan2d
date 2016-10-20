@@ -24,8 +24,7 @@
 % remax{nseg};     % R Maximum for relaxed streamtube
 % kuttas{nseg};    % Flags to apply Kutta condition to each body
 % props{nseg};     % Flag to treat body as actuator disk
-% gammaads{nseg};  % Initial actuator disk strength vector
-% Wjad{nseg};      % Far downstream disk jet velocity
+% deltaCP{nseg};   % Actuator disk pressure jump
 % jtels{nseg};     % Index to TE lower panel
 % jteus{nseg};     % Index to TE upper panel
 % rads{nseg};      % Panel radius of curvature vector
@@ -37,6 +36,9 @@ nseg = length( xepts );
 for iseg = 1:nseg
 
     if ( props{iseg} )  % Only check props
+
+        gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
+        gammas{iseg} = gammainf * ones( size( xepts{iseg} ) );
 
         xpts = xepts{iseg};
         rmin = remin{iseg};
@@ -225,13 +227,13 @@ for itstep=1:ntstep
                     vad = uad;
                     for j = 1:length( xcp{jseg} )  % Loop over vortex j
                         [ uj, vj ] = ringvortex( xcp{jseg}(j), rcp{jseg}(j), xcp{iseg}, rcp{iseg} );
-                        uad = uad + uj * gammaad{jseg}(j) * ds{jseg}(j);
-                        vad = vad + vj * gammaad{jseg}(j) * ds{jseg}(j);
+                        uad = uad + uj * gammas{jseg}(j) * ds{jseg}(j);
+                        vad = vad + vj * gammas{jseg}(j) * ds{jseg}(j);
                     end
 
                     [ uj, vj ] = tubevortex( xepts{jseg}(end), repts{jseg}(end), xcp{iseg}, rcp{iseg} );
-                    uad = uad + gammaad{jseg}(end) * uj;
-                    vad = vad + gammaad{jseg}(end) * vj;
+                    uad = uad + gammas{jseg}(end) * uj;
+                    vad = vad + gammas{jseg}(end) * vj;
                     rhss{iseg} = rhss{iseg} - ( uad .* cos( theta{iseg} ) + vad .* sin( theta{iseg} ) );
                 end
             end
@@ -275,7 +277,6 @@ for itstep=1:ntstep
             Cp{iseg} = 1 - gam.^2;
 
         else
-            gammas{iseg} = gammaad{iseg};
         end
     end
 
@@ -291,8 +292,11 @@ for itstep=1:ntstep
             [ rdist, mdist ] = ode45( @bordm, [remin{iseg}(1), repts{iseg}(1)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
             mass0 = mdist(end);
 
+            gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
+            Wjad = W - gammainf;
+
             % Set vortex tube radius based on jet velocity and mass flow
-            rt = sqrt( mass0 / ( pi * Wjad{iseg} ) );
+            rt = sqrt( mass0 / ( pi * Wjad ) );
 
             % Find streamtube by continuity
             for i = 2:length(xepts{iseg})-2
@@ -309,7 +313,8 @@ for itstep=1:ntstep
             vcp = ( vpts(2:end) + vpts(1:end-1) ) * 0.5;
             Vcp = sqrt( ucp.^2 + vcp.^2 );
 
-            gammainf = gammaad{iseg}(end);
+            % Calculate vortex tube strength and eventual jet velocity
+            gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
 
             % Calculate new strength via: (vs*gamma)=const
             gammanew{iseg}(1:end-1) = ( gammainf * ( W - gammainf / 2 ) ) ./ Vcp;
@@ -319,7 +324,6 @@ for itstep=1:ntstep
             rerr = max( rerr, max( abs( repts{iseg} - rnew{iseg} ) ) );
             gerr = max( gerr, max( abs( gammas{iseg} - gammanew{iseg} ) ) );
 
-            gammaad{iseg} = gammanew{iseg};
         end
     end
 

@@ -19,6 +19,8 @@ streamback = false;
 
 drawplots = true;
 
+ntstep = 1;
+
 % Construct an ellipse
 ncirc = 36;
 rada = 1.0;
@@ -59,7 +61,7 @@ xepts{1} = xep;
 repts{1} = rep;
 kuttas{1} = kutta;
 props{1} = false;
-gammaad{1} = 0.0;
+deltaCP{1} = 0.0;
 jtels{1} = jtelow;
 jteus{1} = jteup;
 rads{1}=rad;
@@ -79,7 +81,7 @@ xepts{2} = xep;
 repts{2} = rep;
 kuttas{2} = kutta;
 props{2} = false;
-gammaad{2} = 0.0;
+deltaCP{2} = 0.0;
 jtels{2} = jtelow;
 jteus{2} = jteup;
 rads{2}=rad;
