@@ -184,8 +184,8 @@ for itstep=1:ntstep
                     vad = uad;
                     for j = 1:length( xcp{iseg} )  % Loop over vortex j
                         [ uj, vj ] = ringvortex( xcp{jseg}(j), rcp{jseg}(j), xcp{iseg}, rcp{iseg} );
-                        uad = uad - uj * gammas{jseg}(j) * ds{jseg}(j);
-                        vad = vad - vj * gammas{jseg}(j) * ds{jseg}(j);
+                        uad = uad + uj * gammaad{jseg}(j) * ds{jseg}(j);
+                        vad = vad + vj * gammaad{jseg}(j) * ds{jseg}(j);
                     end
 
                     [ uj, vj ] = tubevortex( xepts{jseg}(2), repts{jseg}(2), xcp{iseg}, rcp{iseg} );

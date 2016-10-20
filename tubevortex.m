@@ -43,4 +43,7 @@ v( reqzero ) = 0;
 v( isnan(v) ) = -(1+pi/2);
 v( v < -(1+pi/2) ) = -(1+pi/2);
 
+u = -u;
+v = -v;
+
 end

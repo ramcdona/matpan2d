@@ -27,8 +27,8 @@ for isurvey = 1:nsurvey
 
         if( props{iseg} )
             [ uj, vj ] = tubevortex( xepts{iseg}(end), repts{iseg}(end), x(isurvey), r(isurvey) );
-            uv = uv - uj * gammas{iseg}(end);
-            vv = vv - vj * gammas{iseg}(end);
+            uv = uv + uj * gammas{iseg}(end);
+            vv = vv + vj * gammas{iseg}(end);
         end
     end
 

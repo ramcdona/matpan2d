@@ -16,8 +16,8 @@ CT = 5;
 % CT = 177.889/204.99;
 
 % Calculate vortex tube strength and eventual jet velocity
-gammainf = W * ( sqrt( CT + 1 ) - 1 );
-Wjinf = W + gammainf;
+gammainf = - W * ( sqrt( CT + 1 ) - 1 );
+Wjinf = W - gammainf;
 
 % Disk radius
 rdisk = 1.0;
@@ -73,7 +73,7 @@ for j=1:ntstep
     % Integrate mass flow at disk
     x0 = 0;
     mass0 = 20;
-    [rdist,mdist]=ode45( @dm, [0, 1], 0, opts, W, xcp, rcp, -(gammav .* ds), xt, rt, gammat, x0, mass0 );
+    [rdist,mdist]=ode45( @dm, [0, 1], 0, opts, W, xcp, rcp, (gammav .* ds), xt, rt, gammat, x0, mass0 );
     mass0 = mdist(end);
 
     % Set vortex tube radius based on jet velocity and mass flow
@@ -83,7 +83,7 @@ for j=1:ntstep
     rnew = rpts;
     for i = 2:length(xpts)-2
         x0 = xpts(i);
-        [rdist, mdist, re]=ode45( @dm, [0, 2], 0, opts, W, xcp, rcp, -(gammav .* ds), xt, rt, gammat, x0, mass0 );
+        [rdist, mdist, re]=ode45( @dm, [0, 2], 0, opts, W, xcp, rcp, (gammav .* ds), xt, rt, gammat, x0, mass0 );
         rnew(i) = re;
     end
     % Force last two points to equal tube radius
@@ -96,8 +96,8 @@ for j=1:ntstep
 
     for i = 1:length(xcp)
         [ uj, vj ] = ringvortex( xcp(i), rcp(i), xpts, rpts );
-        upts = upts - uj .* gammav(i) .* ds(i);
-        vpts = vpts - vj .* gammav(i) .* ds(i);
+        upts = upts + uj .* gammav(i) .* ds(i);
+        vpts = vpts + vj .* gammav(i) .* ds(i);
     end
 
     for i = 1:length(xt)
@@ -113,7 +113,7 @@ for j=1:ntstep
     Vcp = sqrt( ucp.^2 + vcp.^2 );
 
     % Calculate new strength via: (vs*gamma)=const
-    gammanew = ( gammainf * ( W + gammainf / 2 ) ) ./ Vcp;
+    gammanew = ( gammainf * ( W - gammainf / 2 ) ) ./ Vcp;
     % Force last two to equal tube strength
     gammanew(end-1:end) = gammainf;
 
@@ -141,7 +141,7 @@ ylabel('Maximum displacement')
 
 
 figure(2)
-plot( xcp, gammav, 'x-', [xt xt+2], gammainf*[1 1],[1 1],[0 2] );
+plot( xcp, -gammav, 'x-', [xt xt+2], -gammainf*[1 1],[1 1],[0 2] );
 ax = axis;
 ax(3) = 0; % Force y-axis to zero.
 axis(ax);
@@ -186,8 +186,8 @@ vv = zeros( size(xv) );
 
 for i = 1:length(xcp)
     [ uj, vj ] = ringvortex( xcp(i), rcp(i), xv, rv );
-    uv = uv - uj .* gammav(i) .* ds(i);
-    vv = vv - vj .* gammav(i) .* ds(i);
+    uv = uv + uj .* gammav(i) .* ds(i);
+    vv = vv + vj .* gammav(i) .* ds(i);
 end
 
 for i = 1:length(xt)
@@ -270,7 +270,7 @@ title('v/Vinf')
 
 mask = (rv<.01);
 figure(9)
-plot(xv(mask),Vmagv(mask),'o',[xgrd(1) xend+4],(W+gammainf)*[1 1],'-' )
+plot(xv(mask),Vmagv(mask),'o',[xgrd(1) xend+4],(W-gammainf)*[1 1],'-' )
 ax=axis;
 ax(3)=0;
 axis(ax);
