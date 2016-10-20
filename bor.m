@@ -245,7 +245,7 @@ for itstep=1:ntstep
             % Integrate mass flow at disk
             x0 = xepts{iseg}(1);
             mass0 = inf;
-            [ rdist, mdist ] = ode45( @bordm, [0, repts{iseg}(1)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
+            [ rdist, mdist ] = ode45( @bordm, [remin{iseg}(1), repts{iseg}(1)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
             mass0 = mdist(end);
 
             % Set vortex tube radius based on jet velocity and mass flow
@@ -255,8 +255,8 @@ for itstep=1:ntstep
             rnew = repts{iseg};
             for i = 2:length(xepts{iseg})-2
                 x0 = xpts(i);
-                [rdist, mdist, re] = ode45( @bordm, [0, remax{iseg}(i)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
                 rnew(i) = re;
+                [rdist, mdist, re] = ode45( @bordm, [remin{iseg}(i), remax{iseg}(i)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
             end
             % Force last two points to equal tube radius
             rnew(end-1:end) = rt;
