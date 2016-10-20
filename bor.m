@@ -583,4 +583,14 @@ if( drawplots )
     hold off
     figure(11)
     hold off
+
+    figure(12)
+    trimesh( tri(IO,:), xv, rv, zeros(size(xv)) );
+    hold on
+    for iseg=1:nseg
+        plot( xepts{iseg}, repts{iseg},'k','LineWidth', 2.0 );
+    end
+    axis equal
+    view(0,90)
+
 end
