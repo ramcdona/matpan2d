@@ -1,8 +1,8 @@
 clear all
 format compact
 
-nx = 10;
-nr = 11;
+nx = 30;
+nr = 31;
 
 xs = linspace( -2, 2, nx );
 rs = linspace( 0, 2, nr );
@@ -23,3 +23,4 @@ end
 
 figure(1)
 quiver( x, r, u, v );
+axis equal

@@ -11,6 +11,8 @@ function [ u, v ] = ringvortex( xn, rn, xm, rm )
 x = (xm - xn)./rn;
 r = rm./rn;
 
+reqzero = ( r == 0 );
+
 A = x.^2 + ( r + 1.0 ).^2;
 B = x.^2 + ( r - 1.0 ).^2;
 
@@ -22,5 +24,6 @@ ksq = 4.0 * r ./ A;
 
 u =  - 1.0 ./ ( 2.0 * pi * rn .* sqrt( A ) ) .* ( K - ( 1.0 + 2.0 * ( r - 1.0 ) ./ B ) .* E );
 v = (x./r) ./ ( 2.0 * pi * rn .* sqrt( A ) ) .* ( K - ( 1.0 + 2.0 * r ./ B ) .* E );
+v( reqzero ) = 0;
 
 end

@@ -13,6 +13,7 @@ x = (xm - xn)./rn;
 r = rm./rn;
 
 reqone = ( r == 1 );
+reqzero = ( r == 0 );
 
 A = zeros( size(r) );
 A( r < 1 ) = pi;
@@ -38,6 +39,7 @@ u( ~reqone ) = 1.0 ./ ( 2.0 * pi ) .* ( A(~reqone) + ( x(~reqone) ./ sqrt( C(~re
 u( reqone ) = 0.25 + x(reqone) .* K(reqone) ./ ( 2.0 * pi .* sqrt( x(reqone).^2 + 4.0 ) );
 
 u( isnan(u) ) = 0.25;
+v( reqzero ) = 0;
 v( isnan(v) ) = -(1+pi/2);
 v( v < -(1+pi/2) ) = -(1+pi/2);
 
