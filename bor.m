@@ -182,15 +182,15 @@ for itstep=1:ntstep
 
                     uad = zeros( size( xcp{iseg} ) );
                     vad = uad;
-                    for j = 1:length( xcp{iseg} )  % Loop over vortex j
+                    for j = 1:length( xcp{jseg} )  % Loop over vortex j
                         [ uj, vj ] = ringvortex( xcp{jseg}(j), rcp{jseg}(j), xcp{iseg}, rcp{iseg} );
                         uad = uad + uj * gammaad{jseg}(j) * ds{jseg}(j);
                         vad = vad + vj * gammaad{jseg}(j) * ds{jseg}(j);
                     end
 
-                    [ uj, vj ] = tubevortex( xepts{jseg}(2), repts{jseg}(2), xcp{iseg}, rcp{iseg} );
-                    uad = uad + gammas{jseg}(end) * uj;
-                    vad = vad + gammas{jseg}(end) * vj;
+                    [ uj, vj ] = tubevortex( xepts{jseg}(end), repts{jseg}(end), xcp{iseg}, rcp{iseg} );
+                    uad = uad + gammaad{jseg}(end) * uj;
+                    vad = vad + gammaad{jseg}(end) * vj;
                     rhss{iseg} = rhss{iseg} - ( uad .* cos( theta{iseg} ) + vad .* sin( theta{iseg} ) );
                 end
             end
