@@ -58,9 +58,9 @@ elseif (runcase == 2)
 elseif (runcase == 3 )
 
     % Construct an ellipse
-    ncirc = 101;
-    rada = 5.0;
-    radb = 0.5;
+    ncirc = 1501;
+    rada = 1.1;
+    radb = 0.374;
     xcen = 0.0;
 
     [xep, rep, rad, Vex] = setupellipsoid( ncirc, rada, radb, xcen );
