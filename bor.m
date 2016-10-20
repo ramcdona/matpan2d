@@ -408,6 +408,8 @@ if( drawplots )
     xv = reshape( xg, 1, [] );
     rv = reshape( rg, 1, [] );
 
+    rv = abs( rv + rand(size(rv))*.001-.0005 );
+
     inv = zeros( size(xv) );
 
     for iseg=1:nseg
