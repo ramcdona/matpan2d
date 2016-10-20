@@ -11,9 +11,9 @@ xgrd = linspace( -1, 2, 131 );
 rgrd = linspace( 0, 2, 121 );
 rgrd = rgrd + (pi-3)/1000;  % Offset by small non-round number.
 
-nsl = 11;
+nsl = 23;
 rsl = linspace( 0, rgrd(end), nsl);
-rsl(1) = 1e-3;
+rsl(1) = 1e-2;
 xsl = min(xgrd) * ones( size(rsl) ) + 0.01;
 streamback = false;
 
