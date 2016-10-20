@@ -34,6 +34,46 @@
 
 nseg = length( xepts );
 
+for iseg = 1:nseg
+
+    if ( props{iseg} )  % Only check props
+
+        xpts = xepts{iseg};
+        rmin = remin{iseg};
+        rmax = remax{iseg};
+
+        for jseg = 1:nseg
+            if( ~props{jseg} )  % Skip other props
+
+                xtrim = xepts{jseg};
+                rtrim = repts{jseg};
+
+                for i=1:length(xpts)
+
+                    [x,r] = polyxpoly( xpts(i) * [1 1], [rmin(i) rmax(i)], xtrim, rtrim );
+
+                    if( ~isempty(x) )
+                        if( ~kuttas{jseg} ) % Center line body
+                            rmin( i ) = max( r );
+                        else  % Duct
+                            rmax( i ) = min( r );
+                        end
+                    end
+                end
+            end
+        end
+
+        rep = repts{iseg};
+        rep( rep < rmin ) = rmin( rep < rmin );
+        rep( rep > rmax ) = rmax( rep > rmax );
+        repts{iseg} = rep;
+
+        remin{iseg} = rmin;
+        remax{iseg} = rmax;
+
+    end
+end
+
 if ( drawplots)
     figure( 1 )
     clf
