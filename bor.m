@@ -333,6 +333,15 @@ end
 
 if( drawplots )
 
+    figure(1)
+    hold on
+    for iseg=1:nseg
+        if( props{iseg} )
+            plot( xepts{iseg}, repts{iseg}, 'o-' );
+        end
+    end
+    hold off
+
     % Post-process
     figure(2)
     clf
