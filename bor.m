@@ -276,7 +276,24 @@ for itstep=1:ntstep
             gammas{iseg} = gam';
             Cp{iseg} = 1 - gam.^2;
 
-        else
+            for jseg=1:nseg
+                if( props{jseg} )
+                    xst = xepts{jseg};
+                    rst = repts{jseg};
+
+                    xst = [xst(1) xst xst(end)+10 xst(end)+10];
+                    rst = [ 0 rst rst(end) 0];
+
+                    % Forces open polys to be closed
+                    % Signed minimum distance -- negative is inside.
+                    [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xcp{iseg}, rcp{iseg}, xst, rst, true );
+
+                    mask = dmin <= 0.0;
+
+                    Cp{iseg}(mask) = Cp{iseg}(mask) + deltaCP{iseg};
+
+                end
+            end
         end
     end
 
@@ -493,6 +510,27 @@ if( drawplots )
 
     Vmagv = sqrt(uv.^2+vv.^2);
     Cpv = 1 - Vmagv.^2;
+
+
+    for iseg=1:nseg
+        if( props{iseg} )
+            xst = xepts{iseg};
+            rst = repts{iseg};
+
+            xst = [xst(1) xst xst(end)+10 xst(end)+10];
+            rst = [ 0 rst rst(end) 0];
+
+            % Forces open polys to be closed
+            % Signed minimum distance -- negative is inside.
+            [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, rv, xst, rst, true );
+
+            mask = dmin <= 0.0;
+
+            Cpv(mask) = Cpv(mask) + deltaCP{iseg};
+
+        end
+    end
+
 
     figure(5)
     quiver( xv, rv, uv, vv )
