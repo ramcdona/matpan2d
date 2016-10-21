@@ -161,7 +161,6 @@ for iseg=1:nseg
     segidx = [segidx iseg*ones(1,npans{iseg})];
 end
 idx = [segidx; panidx; 1:npan];
-modidx = idx;
 
 % Apply Kutta condition to AIC
 for iseg=1:nseg
@@ -170,13 +169,9 @@ for iseg=1:nseg
         jteup = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jteus{iseg} ) );
 
         % Apply Kutta condition to AIC
-        AIC(:,jtelow) = AIC(:,jtelow) - AIC(:,jteup);
-        AIC(:,jteup)=[];
-        AIC(jtelow,:) = AIC(jtelow,:) - AIC(jteup,:);
-        AIC(jteup,:)=[];
-
-        % Remove index rows to match
-        modidx(:,jteup)=[];
+        AIC(jteup,:) = zeros( size( AIC(jteup,:) ) );
+        AIC(jteup,jteup) = 1;
+        AIC(jteup,jtelow) = 1;
     end
 end
 
@@ -249,8 +244,7 @@ for itstep=1:ntstep
             jteup = find( ( idx(1,:) == iseg ) & ( idx(2,:) == jteus{iseg} ) );
 
             % Apply Kutta condition to RHS
-            rhs(:,jtelow) = rhs(:,jtelow) - rhs(:,jteup);
-            rhs(:,jteup)=[];
+            rhs(:,jteup) = 0;
         end
     end
 
@@ -260,15 +254,7 @@ for itstep=1:ntstep
     % Break gamma vector into per-body parts
     for iseg=1:nseg
         if( ~props{iseg} )
-            gam = gamma( modidx(1,:) == iseg );
-
-            % Put kutta condition back on for plotting and post-processing.
-            if ( kuttas{iseg} )
-                jtelow = jtels{iseg};
-                jteup = jteus{iseg};
-
-                gam = [gam(1:jteup-1); -gam(jtelow); gam(jteup+1:end)];
-            end
+            gam = gamma( idx(1,:) == iseg );
 
             % Flip reversed panel velocities for plotting
             gam = gam .* sign(dx{iseg})';
