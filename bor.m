@@ -566,7 +566,6 @@ if( drawplots )
         end
     end
 
-
     inv = zeros( size(xv) );
 
     for iseg=1:nseg
@@ -723,7 +722,6 @@ if( drawplots )
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg} );
     end
-    plot( xgrd, zeros(size(xgrd)),'k');
     hold off
     axis equal
 
@@ -735,7 +733,6 @@ if( drawplots )
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg},'k' );
     end
-    plot( xgrd, zeros(size(xgrd)),'k');
     hold off
     axis equal
     view(0,90)
