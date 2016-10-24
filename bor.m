@@ -245,6 +245,24 @@ for itstep=1:ntstep
 
             % Apply Kutta condition to RHS
             rhs(:,jteup) = 0;
+
+            % If actuator disk matches duct TE, apply gamma jump.
+            for jseg=1:nseg
+                if( props{jseg} )
+                    % Duct TE point
+                    xte = xepts{iseg}(1);
+                    rte = repts{iseg}(1);
+                    % Disk leading point
+                    xd = xepts{jseg}(1);
+                    rd = repts{jseg}(1);
+
+                    d = sqrt( ( xte - xd )^2 + ( rte - rd )^2 );
+
+                    if ( d < 1e-3 )
+                        rhs(:,jteup) = rhs(:,jteup) + gammas{jseg}(1);
+                    end
+                end
+            end
         end
     end
 
