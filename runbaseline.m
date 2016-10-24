@@ -1,5 +1,6 @@
 clear all
 format compact
+close all
 
 % Freestream velocity
 W = 1.0;

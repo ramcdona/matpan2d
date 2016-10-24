@@ -21,6 +21,7 @@
 % repts{nseg};     % R Endpoints of panels (or initial streamtube)
 % kuttas{nseg};    % Flags to apply Kutta condition to each body
 % props{nseg};     % Flag to treat body as actuator disk
+% xdisk{nseg};     % X location of disk -- same as xepts{i}(1) unless in duct
 % deltaCP{nseg};   % Actuator disk pressure jump
 % jtels{nseg};     % Index to TE lower panel
 % jteus{nseg};     % Index to TE upper panel
@@ -30,6 +31,7 @@
 
 nseg = length( xepts );
 
+rdisk = cell(size(xepts));
 for iseg = 1:nseg
 
     if ( props{iseg} )  % Only check props
@@ -40,6 +42,8 @@ for iseg = 1:nseg
         xpts = xepts{iseg};
         rmin = zeros(size(repts{iseg}));
         rmax = 1.5 * repts{iseg};
+
+        rdisk{iseg} = repts{iseg}(1);
 
         for jseg = 1:nseg
             if( ~props{jseg} )  % Skip other props
@@ -57,6 +61,13 @@ for iseg = 1:nseg
                         else  % Duct
                             rmax( i ) = min( r );
                         end
+                    end
+                end
+
+                if( kuttas{jseg} )
+                    [x,r] = polyxpoly( xdisk{iseg} * [1 1], 1.1 * [0 max(rtrim)], xtrim, rtrim );
+                    if( ~isempty(x) )
+                        rdisk{iseg} = mean( r );
                     end
                 end
             end
@@ -274,26 +285,6 @@ for itstep=1:ntstep
             gam = gam .* sign(dx{iseg})';
 
             gammas{iseg} = gam';
-            Cp{iseg} = 1 - gam.^2;
-
-            for jseg=1:nseg
-                if( props{jseg} )
-                    xst = xepts{jseg};
-                    rst = repts{jseg};
-
-                    xst = [xst(1) xst xst(end)+10 xst(end)+10];
-                    rst = [ 0 rst rst(end) 0];
-
-                    % Forces open polys to be closed
-                    % Signed minimum distance -- negative is inside.
-                    [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xcp{iseg}, rcp{iseg}, xst, rst, true );
-
-                    mask = dmin <= 0.0;
-
-                    Cp{iseg}(mask) = Cp{iseg}(mask) + deltaCP{iseg};
-
-                end
-            end
         end
     end
 
@@ -351,6 +342,41 @@ for itstep=1:ntstep
     rerrhist(itstep) = rerr;
     gerrhist(itstep) = gerr;
 end
+
+
+
+for iseg=1:nseg
+    if( ~props{iseg} )
+        Cp{iseg} = 1 - gammas{iseg}.^2;
+
+        for jseg=1:nseg
+            if( props{jseg} )
+                xst = xepts{jseg};
+                rst = repts{jseg};
+
+                xst = [xst xst(end)+10 xst(end)+10];
+                rst = [rst rst(end) 0];
+
+                if ( xdisk{jseg} ~= xst(1) )
+                    xst = [xdisk{jseg} xdisk{jseg} xst];
+                    rst = [ 0  rdisk{jseg} rst];
+                else
+                    xst = [xst(1) xst];
+                    rst = [ 0 rst];
+                end
+
+                % Forces open polys to be closed
+                % Signed minimum distance -- negative is inside.
+                [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xcp{iseg}, rcp{iseg}, xst, rst, true );
+
+                mask = dmin <= 0.0;
+
+                Cp{iseg}(mask) = Cp{iseg}(mask) + deltaCP{jseg};
+            end
+        end
+    end
+end
+
 
 if( drawplots )
 
@@ -410,7 +436,7 @@ CD = 0.0;
 for iseg=1:nseg
     if( ~props{iseg} )
 
-        CDi{iseg} = - 2.0 * pi * sum( Cp{iseg}' .* sin( theta{iseg} ) .* rcp{iseg} .* ds{iseg} ) / Sref;
+        CDi{iseg} = - 2.0 * pi * sum( Cp{iseg} .* sin( theta{iseg} ) .* rcp{iseg} .* ds{iseg} ) / Sref;
         CD = CD + CDi{iseg};
 
         disp(['CD on ' names{iseg} ':  ' num2str(CDi{iseg})])
@@ -482,6 +508,20 @@ if( drawplots )
                 xv = [xv xvi];
                 rv = [rv rvi];
             end
+        else
+            off = rdisk{iseg} * 0.1;
+            xgrd = linspace( xdisk{iseg} - off, xdisk{iseg} + off, nsurvey );
+            rgrd = linspace( 0, rdisk{iseg} + off, nsurvey );
+
+            [xg, rg] = meshgrid( xgrd, rgrd );
+
+            xvi = reshape( xg, 1, [] );
+            rvi = reshape( rg, 1, [] );
+
+            rvi = abs( rvi + rand(size(rvi))*.001-.0005 );
+
+            xv = [xv xvi];
+            rv = [rv rvi];
         end
     end
 
@@ -610,8 +650,17 @@ if( drawplots )
             xst = xepts{iseg};
             rst = repts{iseg};
 
-            xst = [xst(1) xst xst(end)+10 xst(end)+10];
-            rst = [ 0 rst rst(end) 0];
+            xst = [xst xst(end)+10 xst(end)+10];
+            rst = [rst rst(end) 0];
+
+            if ( xdisk{jseg} ~= xst(1) )
+                xst = [xdisk{jseg} xdisk{jseg} xst];
+                rst = [ 0  rdisk{jseg} rst];
+            else
+                xst = [xst(1) xst];
+                rst = [ 0 rst];
+            end
+
 
             % Forces open polys to be closed
             % Signed minimum distance -- negative is inside.

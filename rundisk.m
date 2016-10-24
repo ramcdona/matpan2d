@@ -46,6 +46,7 @@ repts{1} = rpts;
 kuttas{1} = false;
 props{1} = true;
 deltaCP{1} = dCP;
+xdisk{1} = xstart;
 jtels{1} = 0;
 jteus{1} = 0;
 rads{1} = 0;
