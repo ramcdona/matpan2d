@@ -62,7 +62,7 @@ elseif (runcase == 3 )
     name = 'Ellipsoid';
 
 elseif (runcase == 4 )
-    naf = 51;
+    naf = 151;
 
     chord = 1.0;
     alpha = 5;       % Degrees about LE
@@ -125,12 +125,15 @@ xstart = 0.5;
 %xstart = 0.99619469809175;
 % xstart = 0.0;
 
+rdisk = repts{1}(1);
+xstart = xepts{1}(1);
+
+
 % End of contracting streamtube
 xend = 5;
 
 % Vortex ring spacing
 dxring = rdisk * 0.1;
-dxring = .05;
 
 % Number of vortex ring panels
 npan = ( xend - xstart ) / dxring;
