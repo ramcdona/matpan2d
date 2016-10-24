@@ -50,7 +50,7 @@ xdisk{1} = xstart;
 jtels{1} = 0;
 jteus{1} = 0;
 rads{1} = 0;
-Vexs{1} = 0;
+Vexs{1} = nan;
 
 % Execute script
 run('bor')

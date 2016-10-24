@@ -149,7 +149,7 @@ xdisk{2} = 0.5;
 jtels{2} = 0;
 jteus{2} = 0;
 rads{2} = 0;
-Vexs{2} = 0;
+Vexs{2} = nan;
 
 % Execute script
 run('bor')
