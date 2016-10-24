@@ -19,8 +19,6 @@
 % names{nseg};     % Component names for output
 % xepts{nseg};     % X Endpoints of panels (or initial streamtube)
 % repts{nseg};     % R Endpoints of panels (or initial streamtube)
-% remin{nseg};     % R Minimum for relaxed streamtube
-% remax{nseg};     % R Maximum for relaxed streamtube
 % kuttas{nseg};    % Flags to apply Kutta condition to each body
 % props{nseg};     % Flag to treat body as actuator disk
 % deltaCP{nseg};   % Actuator disk pressure jump
@@ -40,8 +38,8 @@ for iseg = 1:nseg
         gammas{iseg} = gammainf * ones( size( xepts{iseg} ) );
 
         xpts = xepts{iseg};
-        rmin = remin{iseg};
-        rmax = remax{iseg};
+        rmin = zeros(size(repts{iseg}));
+        rmax = 1.5 * repts{iseg};
 
         for jseg = 1:nseg
             if( ~props{jseg} )  % Skip other props
@@ -71,7 +69,6 @@ for iseg = 1:nseg
 
         remin{iseg} = rmin;
         remax{iseg} = rmax;
-
     end
 end
 

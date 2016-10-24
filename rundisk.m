@@ -39,16 +39,10 @@ npan = ( xend - xstart ) / dxring;
 xpts = linspace( xstart, xend, npan + 1 );
 rpts = rdisk * ones( size( xpts ) );
 
-% Set limits on streamtube dimensions
-rmin = zeros( size( rpts ) );
-rmax = 1.5 * ones( size( rpts ) );
-
 
 names{1} = 'Disk';
 xepts{1} = xpts;
 repts{1} = rpts;
-remin{1} = rmin;
-remax{1} = rmax;
 kuttas{1} = false;
 props{1} = true;
 deltaCP{1} = dCP;
