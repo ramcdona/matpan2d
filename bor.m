@@ -461,6 +461,30 @@ if( drawplots )
 
             xv = [xv xvi];
             rv = [rv rvi];
+
+            xinterest = [xepts{iseg}(1) xepts{iseg}(end)];
+            rinterest = [repts{iseg}(1) repts{iseg}(end)];
+
+            if ( abs( xinterest(1) - xinterest(2) ) < 1e-3 )
+                imid = ceil( length( xepts{iseg} ) * 0.5 );
+                xinterest(2) = xepts{iseg}(imid);
+                rinterest(2) = repts{iseg}(imid);
+            end
+
+            for i=1:length(xinterest)
+                xgrd = linspace( xinterest(i) - off, xinterest(i) + off, nsurvey );
+                rgrd = linspace( max( rinterest(i) - off, 0 ), rinterest(i) + off, nsurvey );
+
+                [xg, rg] = meshgrid( xgrd, rgrd );
+
+                xvi = reshape( xg, 1, [] );
+                rvi = reshape( rg, 1, [] );
+
+                rvi = abs( rvi + rand(size(rvi))*.001-.0005 );
+
+                xv = [xv xvi];
+                rv = [rv rvi];
+            end
         end
     end
 
