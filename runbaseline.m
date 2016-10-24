@@ -79,6 +79,40 @@ jteus{2} = jteup;
 rads{2}=rad;
 Vexs{2}=Vex;
 
+
+% Actuator disk
+dCP = 177.889/204.99;
+
+rdisk = repts{2}(1);
+xstart = xepts{2}(1);
+xdsk = xoff + chord * 0.5;
+
+% End of contracting streamtube
+xend = xstart + 10;
+
+% Vortex ring spacing
+dxring = rdisk * 0.1;
+
+% Number of vortex ring panels
+npan = ( xend - xstart ) / dxring;
+
+% Set up initial geometry
+xpts = linspace( xstart, xend, npan + 1 );
+rpts = rdisk * ones( size( xpts ) );
+
+names{3} = 'Disk';
+xepts{3} = xpts;
+repts{3} = rpts;
+kuttas{3} = false;
+props{3} = true;
+deltaCP{3} = dCP;
+xdisk{3} = xdsk;
+jtels{3} = 0;
+jteus{3} = 0;
+rads{3} = 0;
+Vexs{3} = nan;
+
+
 % Execute script
 run('bor')
 
