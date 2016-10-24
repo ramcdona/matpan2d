@@ -10,11 +10,10 @@
 % W                % Freestream velocity
 % Sref             % Reference area for calculating CD
 % drawplots        % Flag to draw plots and postprocess
-% xgrd             % X Grid points for velocity survey
-% rgrd             % R Grid points for velocity survey
-% xsl              % X Points to start streamlines
-% rsl              % R Points to start streamlines
-% streamback       % Flag to trace streamlines backwards
+% xlim             % X Grid limits for velocity survey
+% rlim             % R Grid limits for velocity survey
+% nsurvey          % Number of points in velocity survey grids
+% nsl              % Number of streamlines to trace
 % ntstep           % Number of streamtube relaxation steps
 %
 % names{nseg};     % Component names for output
@@ -425,15 +424,87 @@ disp(['CD total:  ' num2str(CD)])
 
 % Post-process velocity survey.
 if( drawplots )
-    nx = length( xgrd );
-    nr = length( rgrd );
+    xv = [];
+    rv = [];
+
+    xomax = max( xlim );
+    xomin = min( xlim );
+    romax = max( rlim );
+    romin = min( rlim );
+
+    % Build component near-field survey points
+    for iseg=1:nseg
+        xmin = min( xepts{iseg} );
+        xmax = max( xepts{iseg} );
+
+        rmin = min( repts{iseg} );
+        rmax = max( repts{iseg} );
+
+        xomax = max( xomax, xmax );
+        xomin = min( xomin, xmin );
+        romax = max( romax, rmax );
+        romin = min( romin, rmin );
+
+        if( ~props{iseg} )
+            off = max( xmax - xmin, rmax - rmin ) * 0.2;
+
+            xgrd = linspace( xmin - off, xmax + off, nsurvey );
+
+            rgrd = linspace( max( rmin - off, 0 ), rmax + off, nsurvey );
+
+            [xg, rg] = meshgrid( xgrd, rgrd );
+
+            xvi = reshape( xg, 1, [] );
+            rvi = reshape( rg, 1, [] );
+
+            rvi = abs( rvi + rand(size(rvi))*.001-.0005 );
+
+            xv = [xv xvi];
+            rv = [rv rvi];
+        end
+    end
+
+    % Build far-field survey points
+    xgrd = linspace( xomin, xomax, 31 );
+    rgrd = linspace( max( romin, 0 ), romax, nsurvey );
 
     [xg, rg] = meshgrid( xgrd, rgrd );
 
-    xv = reshape( xg, 1, [] );
-    rv = reshape( rg, 1, [] );
+    xvi = reshape( xg, 1, [] );
+    rvi = reshape( rg, 1, [] );
+    rvi = abs( rvi + rand(size(rvi))*.001-.0005 );
 
-    rv = abs( rv + rand(size(rv))*.001-.0005 );
+    xv = [xv xvi];
+    rv = [rv rvi];
+
+    % Replace points near propwash with aligned points
+    for iseg=1:nseg
+        if( props{iseg} )
+
+            % First streamtube panel length
+            len = sqrt( (xepts{iseg}(2) - xepts{iseg}(1))^2 + (repts{iseg}(2) - repts{iseg}(1))^2 );
+
+            rmin = max( min( repts{iseg} ) - len * 2.0, 0 );
+            rmax = max( repts{iseg} ) + len * 2.0;
+
+            mask = ( xv > xepts{iseg}(1) ) & ( xv < xepts{iseg}(end) ) & ( rv > rmin ) & ( rv < rmax );
+            xv = xv(~mask);
+            rv = rv(~mask);
+
+            xgrd = xepts{iseg};
+            rgrd = linspace( rmin, rmax, nsurvey );
+
+            [xg, rg] = meshgrid( xgrd, rgrd );
+
+            xvi = reshape( xg, 1, [] );
+            rvi = reshape( rg, 1, [] );
+            rvi = abs( rvi + rand(size(rvi))*.001-.0005 );
+
+            xv = [xv xvi];
+            rv = [rv rvi];
+        end
+    end
+
 
     inv = zeros( size(xv) );
 
@@ -458,9 +529,6 @@ if( drawplots )
     end
 
     [uv, vv] = borvel( xv, rv, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props );
-
-    ug = reshape( uv, size(xg) );
-    vg = reshape( vv, size(xg) );
 
     xv = xv( ~inv );
     rv = rv( ~inv );
@@ -575,11 +643,11 @@ if( drawplots )
     Ltol = 0.01;  % flowpath "out-of-triangle" tolerance
     dLtol = 0.5;  % flowpath "curvature" tolerance
 
-    if( streamback )
-        FlowP = TriStream( tri, xv, rv, -uv, -vv, xsl, rsl, verbose, maxits, Ltol, dLtol );
-    else
-        FlowP = TriStream( tri, xv, rv, uv, vv, xsl, rsl, verbose, maxits, Ltol, dLtol );
-    end
+    rsl = linspace( min(rlim), max(rlim), nsl);
+    rsl(1) = rsl(2) * 0.1;
+    xsl = min(xlim) * ones( size(rsl) ) + .01;
+
+    FlowP = TriStream( tri, xv, rv, uv, vv, xsl, rsl, verbose, maxits, Ltol, dLtol );
     PlotTriStream( FlowP );
     hold on
     for iseg=1:nseg

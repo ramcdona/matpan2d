@@ -7,23 +7,11 @@ W = 1.0;
 
 Sref = 1.0;
 
-% Velocity survey vectors
-xgrd = linspace( -1.5, 1.5, 61 );
-xgrd = unique([-1.5:.1:7 -0.1:.01:0] );
-rgrd = linspace( 0, 3, 11 );
-rgrd = unique([0:0.01:0.5 0:.1:3 0.8:0.01:1.05 ]);
-
-xgrd = unique([-1.5:.05:7 0.4:.01:0.5 -.1:.01:.1] );
-rgrd = unique([0:0.01:.7 0:.1:3 ]);
-
-
-rgrd = rgrd + (pi-3)/1000;  % Offset by small non-round number.
+xlim = [-1.5 7];
+rlim = [0 3];
+nsurvey = 51;
 
 nsl = 23;
-rsl = linspace( 0, rgrd(end), nsl);
-rsl(1) = 1e-2;
-xsl = min(xgrd) * ones( size(rsl) ) + 0.01;
-streamback = false;
 
 drawplots = true;
 
