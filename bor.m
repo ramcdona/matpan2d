@@ -445,6 +445,8 @@ end
 
 disp(['CD total:  ' num2str(CD)])
 
+drawnow
+
 % Post-process velocity survey.
 if( drawplots )
     xv = [];
@@ -739,31 +741,31 @@ if( drawplots )
     title('v/Vinf')
 
 
-    xsurvey = [-1 0 1 2 4];
-
-    for i=1:length(xsurvey);
-        mask = ( xv == xsurvey(i) );
-
-        r = rv(mask);
-        v = vv(mask);
-        u = uv(mask);
-
-        [r, indx] = sort( r );
-        v = v(indx);
-        u = u(indx);
-
-        figure(10)
-        plot( v, r )
-        hold on
-
-        figure(11)
-        plot( u, r );
-        hold on
-    end
-    figure(10)
-    hold off
-    figure(11)
-    hold off
+%     xsurvey = [-1 0 1 2 4];
+%
+%     for i=1:length(xsurvey);
+%         mask = ( xv == xsurvey(i) );
+%
+%         r = rv(mask);
+%         v = vv(mask);
+%         u = uv(mask);
+%
+%         [r, indx] = sort( r );
+%         v = v(indx);
+%         u = u(indx);
+%
+%         figure(10)
+%         plot( v, r )
+%         hold on
+%
+%         figure(11)
+%         plot( u, r );
+%         hold on
+%     end
+%     figure(10)
+%     hold off
+%     figure(11)
+%     hold off
 
     figure(12)
     trimesh( tri(IO,:), xv, rv, zeros(size(xv)) );
