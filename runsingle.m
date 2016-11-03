@@ -22,6 +22,7 @@ ntstep = 7;
 % 3 -- Ellipsoid
 % 4 -- NACA 4-Digit duct
 % 5 -- Bontempo body
+% 6 -- NACA 4-Digit body
 runcase = 4;
 
 % Default to no kutta condition, turn on inside runcase setup.
@@ -90,11 +91,42 @@ elseif (runcase == 4 )
     kutta = true;
     name = ['NACA ' num2str(dig1) num2str(dig2) num2str(dig34) ' Duct'];
 
-else
+elseif ( runcase == 5 )
     npts = 151;
 
     [xep, rep, rad, Vex] = setupbontempobody( npts );
     name = 'Bontempo Body';
+else
+    naf = 1501;
+    ibody = ( naf + 1 ) / 2;
+
+    chord = 1.0;
+    xoff = 0.0;      % X-Offset of LE
+
+    % NACA 4-Digit airfoil parameters
+    dig1 = 0;
+    dig2 = 0;
+    dig34 = 20;
+
+    flipaf = false;
+
+    % Airfoil point spacing
+    % 1 -- Cosine cluster LE, TE
+    % 2 -- Cosine cluster LE
+    % 3 -- Uniform
+    spacing = 1;
+
+    [xep, rep, rad, Vex] = setupNACAduct( naf, chord, 0, xoff, 0, dig1, dig2, dig34, flipaf, spacing );
+
+    xep = xep(ibody:end);
+    rep = rep(ibody:end);
+    rep(1) = 0;
+    rep(end) = 0;
+    rad = rad(ibody:end);
+    Vex = Vex(ibody:end);
+
+    name = ['NACA ' num2str(dig1) num2str(dig2) num2str(dig34) ' Body'];
+
 end
 
 names{1} = name;
