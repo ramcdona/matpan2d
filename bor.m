@@ -53,7 +53,10 @@ for iseg = 1:nseg
 
                 for i=1:length(xpts)
 
-                    [x,r] = polyxpoly( xpts(i) * [1 1], [rmin(i) rmax(i)], xtrim, rtrim );
+                    % [x,r] = polyxpoly( xpts(i) * [1 1], [rmin(i) rmax(i)], xtrim, rtrim );
+                    p = InterX( [xpts(i) * [1 1]; [rmin(i) rmax(i)] ], [xtrim; rtrim] );
+                    x = p(1,:)';
+                    r = p(2,:)';
 
                     if( ~isempty(x) )
                         if( ~kuttas{jseg} ) % Center line body
@@ -65,7 +68,11 @@ for iseg = 1:nseg
                 end
 
                 if( kuttas{jseg} )
-                    [x,r] = polyxpoly( xdisk{iseg} * [1 1], 1.1 * [0 max(rtrim)], xtrim, rtrim );
+                    % [x,r] = polyxpoly( xdisk{iseg} * [1 1], 1.1 * [0 max(rtrim)], xtrim, rtrim );
+                    p = InterX( [xdisk{iseg} * [1 1]; 1.1 * [0 max(rtrim)] ], [xtrim; rtrim] );
+                    x = p(1,:)';
+                    r = p(2,:)';
+
                     if( ~isempty(x) )
                         rdisk{iseg} = mean( r );
                     end
