@@ -15,7 +15,7 @@ nsl = 21;
 
 drawplots = true;
 
-ntstep = 1;
+ntstep = 7;
 
 % Construct fuselage mesh
 
