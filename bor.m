@@ -727,6 +727,32 @@ if( drawplots )
 
     FlowP = TriStream( tri, xv, rv, uv, vv, xsl, rsl, verbose, maxits, Ltol, dLtol );
     PlotTriStream( FlowP );
+
+    xcap = [];
+    rcap = [];
+
+    for iseg=1:nseg
+        if( props{iseg} )
+            % Integrate mass flow at disk
+            x0 = xepts{iseg}(1);
+            mass0 = inf;
+            [ rdist, mdist ] = ode45( @bordm, [remin{iseg}(1), repts{iseg}(1)], 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
+            mass0 = mdist(end);
+
+            % Find capture streamtube by continuity
+            x0 = xlim(1) + .01;
+            [rdist, mdist, re] = ode45( @bordm, rlim, 0, opts, W, nseg, xepts, repts, xcp, rcp, gammas, ds, dx, props, x0, mass0 );
+            r0 = re;
+
+            xcap = [xcap x0];
+            rcap = [rcap r0];
+        end
+    end
+
+    FlowPStreamtube = TriStream( tri, xv, rv, uv, vv, xcap, rcap, verbose, maxits, Ltol, dLtol );
+    PlotTriStream( FlowPStreamtube );
+
+
     hold on
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg} );
@@ -738,6 +764,8 @@ if( drawplots )
     trisurf( tri(IO,:), xv, rv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     PlotTriStream( FlowP, 'k' );
+    hold on;
+    PlotTriStream( FlowPStreamtube, 'k' );
     hold on;  % PlotTriStream turns hold off.
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg},'k' );
@@ -782,5 +810,101 @@ if( drawplots )
     end
     axis equal
     view(0,90)
+
+
+    figure(13)
+    clf
+    PlotTriStream( FlowPStreamtube );
+    hold on
+
+    figure(14)
+    clf
+    hold on
+
+    for iseg = 1:nseg
+
+        if ( props{iseg} )  % Only check props
+
+            % Build set of all geometry points 'aft' of xdisk
+            xtube = [];
+            rmax = 0;
+            for jseg = 1:nseg
+                if( ~props{jseg} )  % Skip other props
+                    xtube = unique( [xtube xepts{jseg}] );
+                    rmax = max( rmax, max( repts{jseg} ) );
+                end
+            end
+
+            rmaxtube = 1.1 * rmax * ones( size( xtube ) );
+            rmintube = zeros( size( xtube ) );
+
+            for jseg = 1:nseg
+                if( ~props{jseg} )  % Skip other props
+
+                    xtrim = xepts{jseg};
+                    rtrim = repts{jseg};
+
+                    for i=1:length(xtube)
+                        p = InterX( [xtube(i) * [1 1]; [rmintube(i) rmaxtube(i)] ], [xtrim; rtrim] );
+                        x = p(1,:)';
+                        r = p(2,:)';
+
+                        if( ~isempty(x) )
+                            if( ~kuttas{jseg} ) % Center line body
+                                rmintube( i ) = max( max( r ), rmintube(i) );
+                            else  % Duct
+                                rmaxtube( i ) = min( min( r ), rmaxtube(i) );
+                            end
+                        end
+                    end
+                end
+            end
+
+            xfarcap = FlowPStreamtube(1).x;
+            rfarcap = FlowPStreamtube(1).y;
+
+            mask = rmaxtube > rmax;
+
+            xtubecap = xtube( mask );
+            xtubeduct = xtube( ~mask );
+
+            mask2 = xfarcap < xtubeduct(1);
+            xfarcap = xfarcap( mask2 );
+            rfarcap = rfarcap( mask2 );
+
+            rmaxtubecap =  interp1( xfarcap, rfarcap, xtube(mask) );
+            rmintubecap = rmintube( mask );
+            rmaxtube(mask) = nan;
+
+            mask3 = xfarcap < xtubecap(1);
+            xfarcap = xfarcap( mask3 );
+            rfarcap = rfarcap( mask3 );
+
+            figure(13)
+            plot( xtube, rmintube, xtube, rmaxtube, xepts{iseg}, repts{iseg}, xepts{iseg}, remin{iseg}, xtubecap, rmaxtubecap, xfarcap, rfarcap )
+
+            Atubeup = pi * ( rmaxtube.^2 - rmintube.^2 );
+            Atubedn = pi * ( repts{iseg}.^2 - remin{iseg}.^2 );
+            Atubecap = pi * ( rmaxtubecap.^2 - rmintubecap.^2 );
+            Afarcap = pi * rfarcap.^2;
+
+            figure(14)
+            plot( xtube, Atubeup)
+            plot( xepts{iseg}, Atubedn, '--' )
+            plot( xtubecap, Atubecap, '--' )
+            plot( xfarcap, Afarcap, '--' )
+        end
+    end
+
+    figure(13)
+    hold off
+    axis equal
+
+    figure(14)
+    hold off
+    ax = axis;
+    ax(3) = 0;
+    axis(ax);
+    ylabel('Streamtube Area')
 
 end
