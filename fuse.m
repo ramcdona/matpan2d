@@ -1,4 +1,9 @@
-function [xfusegrid, rfusegrid] = fuse()
+function [xfusegrid, rfusegrid] = fuse( res )
+
+nnose = 30 * res;
+nbarrel = 50 * res;
+ncone = 50 * res;
+ntip = 10 * res;
 
 % Copy-pasted from *.hrm file.
 M=[-3.28692043842088234e-32    0.00000000000000000e+00    0.00000000000000000e+00
@@ -3238,11 +3243,6 @@ slnose = sfuse(iendnose) - sfuse(1);
 slbarrel = sfuse(iendbarrel) - sfuse(iendnose);
 slcone = sfuse(iendcone) - sfuse(iendbarrel);
 sltip = sfuse(end) - sfuse(iendcone);
-
-nnose = 30;
-nbarrel = 50;
-ncone = 50;
-ntip = 10;
 
 anose = 0.5;
 bnose = (slbarrel/slnose)*(nnose/nbarrel); % Assumes abarrel = 1.0

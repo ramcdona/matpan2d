@@ -42,7 +42,7 @@ spacing = 1;
 
 
 % Actually generate bodies
-[xfusegrid, rfusegrid] = fuse();
+[xfusegrid, rfusegrid] = fuse( 10 );
 
 jtelow = -1;
 jteup = - 1;
