@@ -29,6 +29,9 @@
 % Vexs{nseg};      % Exact solution at panel endpoints for isolated body
 %
 
+% Centrally set linewidth for figures that use it.
+lw = 2;
+
 nseg = length( xepts );
 
 rdisk = cell(size(xepts));
@@ -814,7 +817,6 @@ if( drawplots )
 
     figure(13)
     clf
-    PlotTriStream( FlowPStreamtube );
     hold on
 
     figure(14)
@@ -881,7 +883,7 @@ if( drawplots )
             rfarcap = rfarcap( mask3 );
 
             figure(13)
-            plot( xtube, rmintube, xtube, rmaxtube, xepts{iseg}, repts{iseg}, xepts{iseg}, remin{iseg}, xtubecap, rmaxtubecap, xfarcap, rfarcap )
+            plot( xtube, rmintube, xtube, rmaxtube, xepts{iseg}, repts{iseg}, xepts{iseg}, remin{iseg}, xtubecap, rmaxtubecap, xfarcap, rfarcap, 'LineWidth', lw )
 
             Atubeup = pi * ( rmaxtube.^2 - rmintube.^2 );
             Atubedn = pi * ( repts{iseg}.^2 - remin{iseg}.^2 );
@@ -889,10 +891,10 @@ if( drawplots )
             Afarcap = pi * rfarcap.^2;
 
             figure(14)
-            plot( xtube, Atubeup)
-            plot( xepts{iseg}, Atubedn, '--' )
-            plot( xtubecap, Atubecap, '--' )
-            plot( xfarcap, Afarcap, '--' )
+            plot( xtube, Atubeup, 'LineWidth', lw)
+            plot( xepts{iseg}, Atubedn, '--', 'LineWidth', lw )
+            plot( xtubecap, Atubecap, '--', 'LineWidth', lw )
+            plot( xfarcap, Afarcap, '--', 'LineWidth', lw )
         end
     end
 
