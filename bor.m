@@ -432,29 +432,6 @@ if( drawplots )
 
 end
 
-% Calculate maximum error for cases with exact isolated solution
-for iseg=1:nseg
-    if ( ~isnan( Vexs{iseg}(1) ) )
-        err = Vexs{iseg} - gammas{iseg};
-        disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
-    end
-end
-
-% Post-process axial force.
-CDi = [];
-CD = 0.0;
-for iseg=1:nseg
-    if( ~props{iseg} )
-
-        CDi{iseg} = - 2.0 * pi * sum( Cp{iseg} .* sin( theta{iseg} ) .* rcp{iseg} .* ds{iseg} ) / Sref;
-        CD = CD + CDi{iseg};
-
-        disp(['CD on ' names{iseg} ':  ' num2str(CDi{iseg})])
-    end
-end
-
-disp(['CD total:  ' num2str(CD)])
-
 drawnow
 
 % Post-process velocity survey.
@@ -781,6 +758,28 @@ if ( drawplots )
     end
 end
 
+% Calculate maximum error for cases with exact isolated solution
+for iseg=1:nseg
+    if ( ~isnan( Vexs{iseg}(1) ) )
+        err = Vexs{iseg} - gammas{iseg};
+        disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
+    end
+end
+
+% Post-process axial force.
+CDi = [];
+CD = 0.0;
+for iseg=1:nseg
+    if( ~props{iseg} )
+
+        CDi{iseg} = - 2.0 * pi * sum( Cp{iseg} .* sin( theta{iseg} ) .* rcp{iseg} .* ds{iseg} ) / Sref;
+        CD = CD + CDi{iseg};
+
+        disp(['CD on ' names{iseg} ':  ' num2str(CDi{iseg})])
+    end
+end
+
+disp(['CD total:  ' num2str(CD)])
 
 if( drawplots )
 
