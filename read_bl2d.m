@@ -4,20 +4,10 @@ format compact
 
 %fid = fopen( 'baseline.out', 'r' );
 
-% fid = fopen( 'noduct.out', 'r' );
-
-fid = fopen( 'unpowered.out', 'r' );
-
-fid = fopen( 'unpowered.out2', 'r' );
-
-
 fid = fopen( 'lobli_bl2d.out', 'r' );
 
 
 MAXSTA = 1000;
-
-% fid = fopen( 'bor.out', 'r' );
-
 
 fposchar( fid, '=', 3 );
 IE = fscanf( fid, '%f' );
