@@ -2,18 +2,29 @@ clear all
 format compact
 
 
-IE = 101;
+%fid = fopen( 'baseline.out', 'r' );
+
+% fid = fopen( 'noduct.out', 'r' );
+
+fid = fopen( 'unpowered.out', 'r' );
+
+fid = fopen( 'unpowered.out2', 'r' );
 
 
-fid = fopen( 'baseline.out', 'r' );
-NSTA = 993;
+fid = fopen( 'lobli_bl2d.out', 'r' );
+
+
+MAXSTA = 1000;
 
 % fid = fopen( 'bor.out', 'r' );
-% NSTA = 9;
+
+
+fposchar( fid, '=', 3 );
+IE = fscanf( fid, '%f' );
 
 
 
-ETA = nan( IE, NSTA );
+ETA = nan( IE, MAXSTA );
 Y_YE = ETA;
 Y_dim = ETA;
 U_UE = ETA;
@@ -28,75 +39,82 @@ UPLUS = ETA;
 UDEF = ETA;
 VISEFF = ETA;
 
-for ista = 1:NSTA
+next = true;
 
-    fposstr( fid, 'Y/YE' );
+ista = 0;
+while( next )
 
+    next = fposstr( fid, 'Y/YE' );
 
-    M = fscanf( fid, '%f', [12 IE] );
+    if( next )
+        ista = ista + 1;
 
-    len = size( M, 2 );
+        M = fscanf( fid, '%f', [12 IE] );
 
-    ETA(1:len,ista) = M(1,:);
-    Y_YE(1:len,ista) = M(2,:);
-    U_UE(1:len,ista) = M(3,:);
-    T_TE(1:len,ista) = M(4,:);
-    TT_TTE(1:len,ista) = M(5,:);
-    CROCCO(1:len,ista) = M(6,:);
-    PT_PTR(1:len,ista) = M(7,:);
-    M_ME(1:len,ista) = M(8,:);
-    YPLUS(1:len,ista) = M(9,:);
-    UPLUS(1:len,ista) = M(10,:);
-    UDEF(1:len,ista) = M(11,:);
-    VISEFF(1:len,ista) = M(12,:);
+        len = size( M, 2 );
 
-    % Position file at S
-    fposchar( fid, '=', 2 );
-    S(ista) = fscanf( fid, '%f' );
+        ETA(1:len,ista) = M(1,:);
+        Y_YE(1:len,ista) = M(2,:);
+        U_UE(1:len,ista) = M(3,:);
+        T_TE(1:len,ista) = M(4,:);
+        TT_TTE(1:len,ista) = M(5,:);
+        CROCCO(1:len,ista) = M(6,:);
+        PT_PTR(1:len,ista) = M(7,:);
+        M_ME(1:len,ista) = M(8,:);
+        YPLUS(1:len,ista) = M(9,:);
+        UPLUS(1:len,ista) = M(10,:);
+        UDEF(1:len,ista) = M(11,:);
+        VISEFF(1:len,ista) = M(12,:);
 
-    fposchar( fid, '=', 3 );
-    CFW(ista) = fscanf( fid, '%f' );
+        % Position file at S
+        fposchar( fid, '=', 2 );
+        S(ista) = fscanf( fid, '%f' );
 
-    fposchar( fid, '=', 2 );
-    YE(ista) = fscanf( fid, '%f' );
+        fposchar( fid, '=', 3 );
+        CFW(ista) = fscanf( fid, '%f' );
 
-    Y_dim(1:len,ista) = YE(ista) * M(2,:);
+        fposchar( fid, '=', 2 );
+        YE(ista) = fscanf( fid, '%f' );
 
-    jnk = fgetl( fid );
-    fposchar( fid, '=', 1 );
-    RMI(ista) = fscanf( fid, '%f' );
+        Y_dim(1:len,ista) = YE(ista) * M(2,:);
 
-    fposchar( fid, '=', 1 );
-    PE(ista) = fscanf( fid, '%f' );
+        jnk = fgetl( fid );
+        fposchar( fid, '=', 1 );
+        RMI(ista) = fscanf( fid, '%f' );
 
-    jnk = fgetl( fid );
-    fposchar( fid, '=', 1 );
-    Z(ista) = fscanf( fid, '%f' );
+        fposchar( fid, '=', 1 );
+        PE(ista) = fscanf( fid, '%f' );
 
-    fposchar( fid, '=', 2 );
-    DLTAST(ista) = fscanf( fid, '%f' );
+        jnk = fgetl( fid );
+        fposchar( fid, '=', 1 );
+        Z(ista) = fscanf( fid, '%f' );
 
-    jnk = fgetl( fid ); % Finish line
-    fposchar( fid, '=', 3 );
-    THETA(ista) = fscanf( fid, '%f' );
+        fposchar( fid, '=', 2 );
+        DLTAST(ista) = fscanf( fid, '%f' );
 
-    jnk = fgetl( fid ); % Finish line
-    fposchar( fid, '=', 2 );
-    UE(ista) = fscanf( fid, '%f' );
+        jnk = fgetl( fid ); % Finish line
+        fposchar( fid, '=', 3 );
+        THETA(ista) = fscanf( fid, '%f' );
 
-    U_dim(1:len,ista) = UE(ista) * M(3,:);
+        jnk = fgetl( fid ); % Finish line
+        fposchar( fid, '=', 2 );
+        UE(ista) = fscanf( fid, '%f' );
 
-    jnk = fgetl( fid ); % Finish line
-    fposchar( fid, '=', 3 );
-    TAUD(ista) = fscanf( fid, '%f' );
+        U_dim(1:len,ista) = UE(ista) * M(3,:);
 
-    jnk = fgetl( fid ); % Finish line
-    fposchar( fid, '=', 3 );
-    CFE(ista) = fscanf( fid, '%f' );
+        jnk = fgetl( fid ); % Finish line
+        fposchar( fid, '=', 3 );
+        TAUD(ista) = fscanf( fid, '%f' );
 
+        jnk = fgetl( fid ); % Finish line
+        fposchar( fid, '=', 3 );
+        CFE(ista) = fscanf( fid, '%f' );
+
+    end
 end
 fclose( fid );
 
+NSTA = ista;
 
 figure(1)
 plot( U_UE, Y_dim );
