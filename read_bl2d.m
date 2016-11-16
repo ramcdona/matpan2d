@@ -106,97 +106,100 @@ fclose( fid );
 
 NSTA = ista;
 
-figure(1)
-plot( U_UE, Y_dim );
+if( drawplots )
 
-figure(2)
-plot( U_UE, Y_YE );
+    figure(1)
+    plot( U_UE, Y_dim );
 
-figure(3)
-plot( U_dim, Y_dim );
+    figure(2)
+    plot( U_UE, Y_YE );
 
-figure(4)
-plot( UPLUS, YPLUS );
+    figure(3)
+    plot( U_dim, Y_dim );
 
-
-
-figure(5)
-plot( S, CFE, S, CFW )
-xlabel('S (ft)')
-legend('c_{f,e}','c_{f,w}')
-
-figure(6)
-plot( S, TAUD )
-xlabel('S (ft)')
-ylabel('\tau_w (lbf/ft^2)')
-
-figure(7)
-plot( S, DLTAST, S, THETA, S, YE )
-xlabel('S (ft)')
-ylabel('BL Thickness (ft)')
-legend( '\delta^* (Displacement)', '\theta (Momentum)', 'Y_e' )
+    figure(4)
+    plot( UPLUS, YPLUS );
 
 
 
-[xfusegrid, rfusegrid] = fuse( 1 );
+    figure(5)
+    plot( S, CFE, S, CFW )
+    xlabel('S (ft)')
+    legend('c_{f,e}','c_{f,w}')
 
-figure(8)
-plot( xfusegrid, rfusegrid, 'Color', [0.5 0.5 0.5] )
-hold on
+    figure(6)
+    plot( S, TAUD )
+    xlabel('S (ft)')
+    ylabel('\tau_w (lbf/ft^2)')
 
-kv = .001;
+    figure(7)
+    plot( S, DLTAST, S, THETA, S, YE )
+    xlabel('S (ft)')
+    ylabel('BL Thickness (ft)')
+    legend( '\delta^* (Displacement)', '\theta (Momentum)', 'Y_e' )
 
-for ista = 1:NSTA
-    plot( Z(ista) + kv*U_dim(:,ista), RMI(ista) + Y_dim(:,ista),'k', 'LineWidth', 1.0 )
+
+
+    [xfusegrid, rfusegrid] = fuse( 1 );
+
+    figure(8)
+    plot( xfusegrid, rfusegrid, 'Color', [0.5 0.5 0.5] )
+    hold on
+
+    kv = .001;
+
+    for ista = 1:NSTA
+        plot( Z(ista) + kv*U_dim(:,ista), RMI(ista) + Y_dim(:,ista),'k', 'LineWidth', 1.0 )
+    end
+    hold off
+    axis equal
+    ax=axis;
+    ax(1) = 0;
+    ax(3) = 0;
+    ax(4) = 10;
+    axis(ax);
+    axis off
+
+
+    figure(9)
+    plot( xfusegrid, rfusegrid, 'k' )
+    hold on
+    plot( [0 Z] , [0 RMI + DLTAST], 'Color', [0.5 0.5 0.5] )
+    plot( [0 Z] , [0 RMI + THETA], '--', 'Color', [0.5 0.5 0.5] )
+    plot( [0 Z] , [0 RMI + YE], 'k:' )
+    hold off
+    axis equal
+    ax=axis;
+    ax(1) = 0;
+    ax(3) = 0;
+    ax(4) = 10;
+    axis(ax);
+    axis off
+
+
+
+    figure(10)
+    plot( xfusegrid, rfusegrid, 'k' )
+    hold on
+    plot( [0 Z] , [0 RMI + DLTAST], 'Color', [0.5 0.5 0.5] )
+    plot( [0 Z] , [0 RMI + THETA], '--', 'Color', [0.5 0.5 0.5] )
+    plot( [0 Z] , [0 RMI + YE], 'k:' )
+
+    for ista = 1:NSTA
+        plot( Z(ista) + kv*U_dim(:,ista), RMI(ista) + Y_dim(:,ista),'k', 'LineWidth', 1.0 )
+    end
+    hold off
+    axis equal
+    ax=axis;
+    ax(1) = 0;
+    ax(3) = 0;
+    ax(4) = 10;
+    axis(ax);
+    axis off
+
+
+    figure(11)
+    plot( xfusegrid, rfusegrid, 'k' )
+    hold on
+    plot( Z , PE )
 end
-hold off
-axis equal
-ax=axis;
-ax(1) = 0;
-ax(3) = 0;
-ax(4) = 10;
-axis(ax);
-axis off
-
-
-figure(9)
-plot( xfusegrid, rfusegrid, 'k' )
-hold on
-plot( [0 Z] , [0 RMI + DLTAST], 'Color', [0.5 0.5 0.5] )
-plot( [0 Z] , [0 RMI + THETA], '--', 'Color', [0.5 0.5 0.5] )
-plot( [0 Z] , [0 RMI + YE], 'k:' )
-hold off
-axis equal
-ax=axis;
-ax(1) = 0;
-ax(3) = 0;
-ax(4) = 10;
-axis(ax);
-axis off
-
-
-
-figure(10)
-plot( xfusegrid, rfusegrid, 'k' )
-hold on
-plot( [0 Z] , [0 RMI + DLTAST], 'Color', [0.5 0.5 0.5] )
-plot( [0 Z] , [0 RMI + THETA], '--', 'Color', [0.5 0.5 0.5] )
-plot( [0 Z] , [0 RMI + YE], 'k:' )
-
-for ista = 1:NSTA
-    plot( Z(ista) + kv*U_dim(:,ista), RMI(ista) + Y_dim(:,ista),'k', 'LineWidth', 1.0 )
-end
-hold off
-axis equal
-ax=axis;
-ax(1) = 0;
-ax(3) = 0;
-ax(4) = 10;
-axis(ax);
-axis off
-
-
-figure(11)
-plot( xfusegrid, rfusegrid, 'k' )
-hold on
-plot( Z , PE )
