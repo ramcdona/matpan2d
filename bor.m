@@ -8,6 +8,7 @@
 % There may be multiple input bodies/objects, each an item in a cell array.
 %
 % W                % Freestream velocity
+% Minf             % Freestream Mach number for compressibility correction
 % Sref             % Reference area for calculating CD
 % drawplots        % Flag to draw plots and postprocess
 % xlim             % X Grid limits for velocity survey
@@ -29,10 +30,18 @@
 % Vexs{nseg};      % Exact solution at panel endpoints for isolated body
 %
 
+gammagas = 1.4;
+
 % Centrally set linewidth for figures that use it.
 lw = 2;
 
 nseg = length( xepts );
+
+beta = sqrt( 1.0 - Minf.^2 );
+rlim = rlim .* beta;
+for iseg = 1:nseg
+    repts{iseg} = repts{iseg} .* beta;
+end
 
 rdisk = cell(size(xepts));
 for iseg = 1:nseg
@@ -388,6 +397,23 @@ for iseg=1:nseg
 end
 
 
+for iseg = 1:nseg
+    if( ~props{iseg} )
+        ua = gammas{iseg} .* sign(dx{iseg}) .* cos( theta{ iseg } ) - 1.0;
+        va = gammas{iseg} .* sign(dx{iseg}) .* sin( theta{ iseg } );
+        Bb = sqrt( 1.0 - (Minf.^2) .* ( 1.0 + ua ) );
+
+        u = ua ./ Bb.^2;
+        v = va .* beta ./ Bb.^2;
+
+        vmag = sqrt( ( u + 1.0 ).^2 + v.^2 );
+
+        CpNLR{iseg} = ( 2.0 / ( gammagas * Minf^2 ) ) * ( ( 1.0 + 0.5 * ( gammagas - 1.0 ) .* (Minf^2) .* ( 1.0 - (vmag.^2) ) ) .^ ( gammagas / ( gammagas - 1.0 ) ) - 1.0 );
+
+        CpGothert{iseg} = Cp{iseg} ./ beta.^2;
+    end
+end
+
 if( drawplots )
 
     figure(1)
@@ -430,6 +456,16 @@ if( drawplots )
     legend( 'Streamtube residual', 'Gamma residual' )
     hold off
 
+    figure(15)
+    clf
+    hold on
+    for iseg=1:nseg
+        if( ~props{iseg} )
+            plot( xcp{iseg}, -CpGothert{iseg}, xcp{iseg}, -Cp{iseg}, xcp{iseg}, -CpNLR{iseg} );
+        end
+    end
+    hold off
+    ylabel('-C_p Compressible')
 end
 
 drawnow

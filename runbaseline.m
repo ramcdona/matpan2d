@@ -4,6 +4,7 @@ close all
 
 % Freestream velocity
 W = 1.0;
+Minf = 0.785;
 
 Sref = 1.0;
 
