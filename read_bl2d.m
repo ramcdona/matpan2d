@@ -6,6 +6,7 @@ format compact
 
 fid = fopen( 'lobli_bl2d.out', 'r' );
 
+drawplots = true;
 
 MAXSTA = 1000;
 
