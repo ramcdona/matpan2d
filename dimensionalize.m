@@ -54,8 +54,8 @@ fprintf( fid, '  XMA     = %f\n', Minf );
 fprintf( fid, '  PT1     = %f\n', Pt );
 fprintf( fid, '  TT1     = %f\n', Tt );
 
-fprintf( fid, '  PRNTINC = %.10E\n', s(end)/Nprofile );
-fprintf( fid, '  PROINC  = %.10E\n', s(end)/Nprofile );
+fprintf( fid, '  PRNTINC = %.16E\n', s(end)/Nprofile );
+fprintf( fid, '  PROINC  = %.16E\n', s(end)/Nprofile );
 
 
 fprintf( fid, '  JI      = 1\n' );
