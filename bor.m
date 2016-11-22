@@ -854,7 +854,9 @@ if( drawplots )
 
     figure(8)
     PlotTriStream( FlowP );
-    PlotTriStream( FlowPStreamtube );
+    if( exist( 'FlowPStreamtube', 'var' ) )
+        PlotTriStream( FlowPStreamtube );
+    end
     hold on
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg} );
@@ -867,7 +869,9 @@ if( drawplots )
     hold on
     PlotTriStream( FlowP, 'k' );
     hold on;
-    PlotTriStream( FlowPStreamtube, 'k' );
+    if( exist( 'FlowPStreamtube', 'var' ) )
+        PlotTriStream( FlowPStreamtube, 'k' );
+    end
     hold on;  % PlotTriStream turns hold off.
     for iseg=1:nseg
         plot( xepts{iseg}, repts{iseg},'k' );
@@ -914,32 +918,36 @@ if( drawplots )
     view(0,90)
 
 
-    figure(13)
-    plot( xtube, rmintube, xtube, rmaxtube, xtubecap, rmaxtubecap, xfarcap, rfarcap, 'LineWidth', lw )
-    hold on
-    for iseg = 1:nseg
-         if ( props{iseg} )
-            plot( xepts{iseg}, repts{iseg}, xepts{iseg}, remin{iseg}, 'LineWidth', lw )
-        end
-    end
-    hold off
-    axis equal
+    if( exist( 'xtube', 'var' ) )
 
-    figure(14)
-    plot( xtube, Atubeup, 'LineWidth', lw)
-    hold on
-    plot( xtubecap, Atubecap, '--', 'LineWidth', lw )
-    plot( xfarcap, Afarcap, '--', 'LineWidth', lw )
-    for iseg = 1:nseg
-        if ( props{iseg} )
-            figure(14)
-            plot( xepts{iseg}, Atubedn, '--', 'LineWidth', lw )
+        figure(13)
+        plot( xtube, rmintube, xtube, rmaxtube, xtubecap, rmaxtubecap, xfarcap, rfarcap, 'LineWidth', lw )
+        hold on
+        for iseg = 1:nseg
+             if ( props{iseg} )
+                plot( xepts{iseg}, repts{iseg}, xepts{iseg}, remin{iseg}, 'LineWidth', lw )
+            end
         end
+        hold off
+        axis equal
+
+        figure(14)
+        plot( xtube, Atubeup, 'LineWidth', lw)
+        hold on
+        plot( xtubecap, Atubecap, '--', 'LineWidth', lw )
+        plot( xfarcap, Afarcap, '--', 'LineWidth', lw )
+        for iseg = 1:nseg
+            if ( props{iseg} )
+                figure(14)
+                plot( xepts{iseg}, Atubedn, '--', 'LineWidth', lw )
+            end
+        end
+        hold off
+        ax = axis;
+        ax(3) = 0;
+        axis(ax);
+        ylabel('Streamtube Area')
+
     end
-    hold off
-    ax = axis;
-    ax(3) = 0;
-    axis(ax);
-    ylabel('Streamtube Area')
 
 end
