@@ -28,8 +28,14 @@ for iseg=1:1
     P = ( CpNLR{iseg}.* qinf + Pamb ) ./ Pt;
     P = [ 1.0 P(1:end-1) 1.0 ];
 
-    x = [xepts{iseg}(1) xcp{iseg}(1:end-1) xepts{iseg}(end)];
-    r = [repts{iseg}(1) rcp{iseg}(1:end-1) repts{iseg}(end)] ./ beta;
+    xo = xeptsorig{iseg};
+    ro = reptsorig{iseg};
+
+    xcen = (xo(2:end)+xo(1:end-1))*0.5;
+    rcen = (ro(2:end)+ro(1:end-1))*0.5;
+
+    x = [xo(1) xcen(1:end-1) xo(end)];
+    r = [ro(1) rcen(1:end-1) ro(end)]; % ./ beta;
 
     dxs = x(2:end) - x(1:end-1);
     drs = r(2:end) - r(1:end-1);
