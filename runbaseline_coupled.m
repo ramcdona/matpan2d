@@ -117,11 +117,3 @@ Vexs{3} = nan;
 % Execute script
 run('bor')
 
-% nam = ['Cp' num2str(Minf*1000)];
-% assignin('caller', nam , CpGothert)
-% save( [nam '.mat'], nam );
-%
-% if ( Minf == 0.0 )
-%     save('xcp.mat', 'xcp')
-%     save('props.mat', 'props')
-% end
