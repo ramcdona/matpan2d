@@ -1,6 +1,4 @@
-clear all
-format compact
-close all
+function [S, DLTAST] = runbaseline_coupled( Sin, DLTASTin, drawplots )
 
 % Freestream velocity
 W = 1.0;
@@ -13,8 +11,6 @@ rlim = [0 20];
 nsurvey = 51;
 
 nsl = 21;
-
-drawplots = true;
 
 ntstep = 7;
 
@@ -117,3 +113,8 @@ Vexs{3} = nan;
 % Execute script
 run('bor')
 
+run('dimensionalize')
+
+system( './bl2d < lobli_bl2d.in > lobli_bl2d.out' )
+
+[S, DLTAST] = read_bl2d( 'lobli_bl2d.out', drawplots );
