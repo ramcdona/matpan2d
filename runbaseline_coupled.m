@@ -40,6 +40,37 @@ spacing = 1;
 
 % Actually generate bodies
 [xfusegrid, rfusegrid] = fuse( 10 );
+xo = xfusegrid;
+ro = rfusegrid;
+
+if( ~isempty( Sin ) )
+    dxg = xfusegrid(2:end)-xfusegrid(1:end-1);
+    drg = rfusegrid(2:end)-rfusegrid(1:end-1);
+    dsg = sqrt( dxg.^2 + drg.^2 );
+    sfusegrid = [ 0 cumsum(dsg) ];
+
+    nx = [-1 -drg./dsg];
+    nr = [0 dxg./dsg];
+    nx(end) = 1;
+    nr(end) = 0;
+
+    dltastgrid = interp1( Sin, DLTASTin, sfusegrid );
+
+    figure(100)
+    clf
+
+    plot( xfusegrid, rfusegrid )
+    hold on
+
+    xfusegrid = xfusegrid + dltastgrid .* nx;
+    rfusegrid = rfusegrid + dltastgrid .* nr;
+
+    plot( xfusegrid, rfusegrid, '--' )
+    hold off
+    axis equal
+
+    drawnow
+end
 
 jtelow = -1;
 jteup = - 1;
@@ -48,6 +79,10 @@ kutta = false;
 names{1} = 'Fuselage';
 xepts{1} = xfusegrid;
 repts{1} = rfusegrid;
+
+xeptsorig{1} = xo;
+reptsorig{1} = ro;
+
 kuttas{1} = kutta;
 props{1} = false;
 deltaCP{1} = 0.0;
