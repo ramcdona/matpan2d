@@ -1,18 +1,11 @@
-clear all
-format compact
+function [S, DLTAST] = read_bl2d( fname, drawplots )
 
-
-%fid = fopen( 'baseline.out', 'r' );
-
-fid = fopen( 'lobli_bl2d.out', 'r' );
-
-drawplots = true;
+fid = fopen( fname, 'r' );
 
 MAXSTA = 1000;
 
 fposchar( fid, '=', 3 );
 IE = fscanf( fid, '%f' );
-
 
 
 ETA = nan( IE, MAXSTA );
