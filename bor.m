@@ -782,9 +782,11 @@ if ( drawplots )
             rmintubecap = rmintube( mask );
             rmaxtube(mask) = nan;
 
-            mask3 = xfarcap < xtubecap(1);
-            xfarcap = xfarcap( mask3 );
-            rfarcap = rfarcap( mask3 );
+            if ( ~isempty(xtubecap) )
+                mask3 = xfarcap < xtubecap(1);
+                xfarcap = xfarcap( mask3 );
+                rfarcap = rfarcap( mask3 );
+            end
 
             Atubeup = pi * ( rmaxtube.^2 - rmintube.^2 );
             Atubedn = pi * ( repts{iseg}.^2 - remin{iseg}.^2 );
