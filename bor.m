@@ -774,9 +774,11 @@ if ( drawplots )
             xtubecap = xtube( mask );
             xtubeduct = xtube( ~mask );
 
-            mask2 = xfarcap < xtubeduct(1);
-            xfarcap = xfarcap( mask2 );
-            rfarcap = rfarcap( mask2 );
+            if ( ~isempty(xtubeduct) )
+                mask2 = xfarcap < xtubeduct(1);
+                xfarcap = xfarcap( mask2 );
+                rfarcap = rfarcap( mask2 );
+            end
 
             rmaxtubecap =  interp1( xfarcap, rfarcap, xtube(mask) );
             rmintubecap = rmintube( mask );
