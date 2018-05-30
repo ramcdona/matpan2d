@@ -1,4 +1,4 @@
-function [u, v] = planarvel( x, y, W, nseg, xepts, yepts, xcp, ycp, gammas, ds, dx, props )
+function [u, v] = planarvel( x, y, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
 
 % Handle x, y of any dimension (scalar, vector, matrix) by iterating
 % through a linear index 1:numel(x).  This makes it impossible to get any
@@ -16,29 +16,35 @@ for isurvey = 1:nsurvey
 
     for iseg=1:nseg
 
-        mask = true( size( gammas{iseg} ) );
         if ( props{iseg} )
-            mask(end/2) = false;
-            mask(end) = false;
+            [ uj, vj ] = ptvortex( xupcp{iseg}, yupcp{iseg}, x(isurvey), y(isurvey) );
+
+            uv = uv + sum( uj .* gammasup{iseg} .* dsup{iseg} .* sign(dxup{iseg}) );
+            vv = vv + sum( vj .* gammasup{iseg} .* dsup{iseg} .* sign(dxup{iseg}) );
+
+            xv = xuppts{iseg}(end) - xuppts{iseg}(end - 1);
+            yv = yuppts{iseg}(end) - yuppts{iseg}(end - 1);
+            [ uj, vj ] = rayvortex( xuppts{iseg}(end), yuppts{iseg}(end), xv, yv, x(isurvey), y(isurvey) );
+            uv = uv + uj * gammasup{iseg}(end);
+            vv = vv + vj * gammasup{iseg}(end);
+
+            [ uj, vj ] = ptvortex( xlowcp{iseg}, ylowcp{iseg}, x(isurvey), y(isurvey) );
+
+            uv = uv + sum( uj .* gammaslow{iseg} .* dslow{iseg} .* sign(dxlow{iseg}) );
+            vv = vv + sum( vj .* gammaslow{iseg} .* dslow{iseg} .* sign(dxlow{iseg}) );
+
+            xv = xlowpts{iseg}(end) - xlowpts{iseg}(end - 1);
+            yv = ylowpts{iseg}(end) - ylowpts{iseg}(end - 1);
+            [ uj, vj ] = rayvortex( xlowpts{iseg}(end), ylowpts{iseg}(end), xv, yv, x(isurvey), y(isurvey) );
+            uv = uv + uj * gammaslow{iseg}(end);
+            vv = vv + vj * gammaslow{iseg}(end);
+        else
+            [ uj, vj ] = ptvortex( xcp{iseg}, ycp{iseg}, x(isurvey), y(isurvey) );
+
+            uv = uv + sum( uj .* gammas{iseg} .* ds{iseg} .* sign(dx{iseg}) );
+            vv = vv + sum( vj .* gammas{iseg} .* ds{iseg} .* sign(dx{iseg}) );
         end
 
-        [ uj, vj ] = ptvortex( xcp{iseg}, ycp{iseg}, x(isurvey), y(isurvey) );
-        uv = uv + sum( uj .* gammas{iseg}(mask) .* ds{iseg} .* sign(dx{iseg}) );
-        vv = vv + sum( vj .* gammas{iseg}(mask) .* ds{iseg} .* sign(dx{iseg}) );
-
-        if( props{iseg} )
-            xv = xepts{iseg}(end/2) - xepts{iseg}(end/2 - 1);
-            yv = yepts{iseg}(end/2) - yepts{iseg}(end/2 - 1);
-            [ uj, vj ] = rayvortex( xepts{iseg}(end/2), yepts{iseg}(end/2), xv, yv, x(isurvey), y(isurvey) );
-            uv = uv + uj * gammas{iseg}(end/2);
-            vv = vv + vj * gammas{iseg}(end/2);
-
-            xv = xepts{iseg}(end) - xepts{iseg}(end - 1);
-            yv = yepts{iseg}(end) - yepts{iseg}(end - 1);
-            [ uj, vj ] = rayvortex( xepts{iseg}(end), yepts{iseg}(end), xv, yv, x(isurvey), y(isurvey) );
-            uv = uv + uj * gammas{iseg}(end);
-            vv = vv + vj * gammas{iseg}(end);
-        end
     end
 
     u(isurvey) = uv;

@@ -63,8 +63,12 @@ npan = round( tubelen / dlring );
 
 % Set up initial streamtube geometry
 names{1} = 'Disk';
-xepts{1} = [linspace( xl0, xl1, npan + 1 ) linspace( xu0, xu1, npan + 1 )];
-yepts{1} = [linspace( yl0, yl1, npan + 1 ) linspace( yu0, yu1, npan + 1 )];
+xuppts{1} = linspace( xu0, xu1, npan + 1 );
+yuppts{1} = linspace( yu0, yu1, npan + 1 );
+xlowpts{1} = linspace( xl0, xl1, npan + 1 );
+ylowpts{1} = linspace( yl0, yl1, npan + 1 );
+xepts{1} = [];
+yepts{1} = [];
 kuttas{1} = false;
 props{1} = true;
 deltaCP{1} = dCP;

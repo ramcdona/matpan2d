@@ -19,7 +19,11 @@
 %
 % names{nseg};     % Component names for output
 % xepts{nseg};     % X Endpoints of panels (or initial streamtube)
-% yepts{nseg};     % Y Endpoints of panels (or initial streamtube)
+% yepts{nseg};     % Y Endpoints of panels
+% xuppts{nseg};    % X Endpoints of upper initial streamtube
+% yuppts{nseg};    % Y Endpoints of upper initial streamtube
+% xlowpts{nseg};   % X Endpoints of lower initial streamtube
+% ylowpts{nseg};   % Y Endpoints of lower initial streamtube
 % kuttas{nseg};    % Flags to apply Kutta condition to each body
 % props{nseg};     % Flag to treat body as actuator disk
 % deltaCP{nseg};   % Actuator disk pressure jump
@@ -60,21 +64,43 @@ end
 npan = 0;
 % Process geometry
 for iseg=1:nseg
-    xep = xepts{iseg};
-    yep = yepts{iseg};
-
-    dx{iseg} = xep(2:end) - xep(1:end-1);
-    dy{iseg} = yep(2:end) - yep(1:end-1);
-
-    ds{iseg} = sqrt( dx{iseg}.^2 + dy{iseg}.^2 );        % Panel arclength
-    theta{iseg} = atan2( dy{iseg}, dx{iseg} );           % Panel slope angle
-    xcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
-    ycp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
-
     if ( ~props{iseg} ) % 'Normal' components
+        xep = xepts{iseg};
+        yep = yepts{iseg};
+
+        dx{iseg} = xep(2:end) - xep(1:end-1);
+        dy{iseg} = yep(2:end) - yep(1:end-1);
+
+        ds{iseg} = sqrt( dx{iseg}.^2 + dy{iseg}.^2 );        % Panel arclength
+        theta{iseg} = atan2( dy{iseg}, dx{iseg} );           % Panel slope angle
+        xcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+        ycp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
+
         npans{iseg} = length( xcp{iseg} );
         npan = npan + npans{iseg};
     else % Actuator disk doesn't contribute panels
+        xep = xuppts{iseg};
+        yep = yuppts{iseg};
+
+        dxup{iseg} = xep(2:end) - xep(1:end-1);
+        dyup{iseg} = yep(2:end) - yep(1:end-1);
+
+        dsup{iseg} = sqrt( dxup{iseg}.^2 + dyup{iseg}.^2 );    % Panel arclength
+        thetaup{iseg} = atan2( dyup{iseg}, dxup{iseg} );       % Panel slope angle
+        xupcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+        yupcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
+
+        xep = xlowpts{iseg};
+        yep = ylowpts{iseg};
+
+        dxlow{iseg} = xep(2:end) - xep(1:end-1);
+        dylow{iseg} = yep(2:end) - yep(1:end-1);
+
+        dslow{iseg} = sqrt( dxlow{iseg}.^2 + dylow{iseg}.^2 );  % Panel arclength
+        thetalow{iseg} = atan2( dylow{iseg}, dxlow{iseg} );     % Panel slope angle
+        xlowcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+        ylowcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
+
         npans{iseg} = 0;
     end
 end
@@ -157,16 +183,27 @@ for itstep=1:ntstep
     % Re-process actuator disk geometry
     for iseg=1:nseg
         if( props{iseg} )
-            xep = xepts{iseg};
-            yep = yepts{iseg};
+            xep = xuppts{iseg};
+            yep = yuppts{iseg};
 
-            dx{iseg} = xep(2:end) - xep(1:end-1);
-            dy{iseg} = yep(2:end) - yep(1:end-1);
+            dxup{iseg} = xep(2:end) - xep(1:end-1);
+            dyup{iseg} = yep(2:end) - yep(1:end-1);
 
-            ds{iseg} = sqrt( dx{iseg}.^2 + dy{iseg}.^2 );        % Panel arclength
-            theta{iseg} = atan2( dy{iseg}, dx{iseg} );           % Panel slope angle
-            xcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
-            ycp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel r center point
+            dsup{iseg} = sqrt( dxup{iseg}.^2 + dyup{iseg}.^2 );    % Panel arclength
+            thetaup{iseg} = atan2( dyup{iseg}, dxup{iseg} );       % Panel slope angle
+            xupcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+            yupcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
+
+            xep = xlowpts{iseg};
+            yep = ylowpts{iseg};
+
+            dxlow{iseg} = xep(2:end) - xep(1:end-1);
+            dylow{iseg} = yep(2:end) - yep(1:end-1);
+
+            dslow{iseg} = sqrt( dxlow{iseg}.^2 + dylow{iseg}.^2 );  % Panel arclength
+            thetalow{iseg} = atan2( dylow{iseg}, dxlow{iseg} );     % Panel slope angle
+            xlowcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+            ylowcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
         end
     end
 
@@ -249,18 +286,18 @@ for itstep=1:ntstep
     for iseg=1:nseg
         if( props{iseg} )
             % Integrate mass flow at disk
-            x0 = xepts{iseg}(1);
-            y0 = yepts{iseg}(1);
-            xv = xepts{iseg}(end/2 + 1) - xepts{iseg}(1);
-            yv = yepts{iseg}(end/2 + 1) - yepts{iseg}(1);
+            x0 = xlowpts{iseg}(1);
+            y0 = ylowpts{iseg}(1);
+            xv = xuppts{iseg}(1) - x0;
+            yv = yuppts{iseg}(1) - y0;
             dlen = sqrt( xv^2 + yv^2 );
             xv = xv / dlen;
             yv = yv / dlen;
             
             mass0 = inf;
             
-            % dm = planardm( eta, mass, W, nseg, xepts, yepts, xcp, ycp, gammas, ds, dx, props, x0, y0, xv, yv, len, mass0 )
-            [ ydist, mdist ] = ode45( @planardm, [0, 1], 0, opts, W, nseg, xepts, yepts, xcp, ycp, gammas, ds, dx, props, x0, y0, xv, yv, dlen, mass0 );
+            % dm = planardm( eta, mass, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, len, mass0 );
+            [ ydist, mdist ] = ode45( @planardm, [0, 1], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, mass0 );
             mass0 = mdist(end);
 
             gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
@@ -530,7 +567,7 @@ if( drawplots )
         end
     end
 
-    [uv, vv] = planarvel( xv, yv, W, nseg, xepts, yepts, xcp, ycp, gammas, ds, dx, props );
+    [uv, vv] = planarvel( xv, yv, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
 
     xv = xv( ~inv );
     yv = yv( ~inv );
