@@ -8,8 +8,8 @@ Minf = 0.0;
 
 Sref = 1.0;
 
-xlim = [-1 6];
-ylim = [-3 3];
+xlim = [-3 12];
+ylim = [-4 4];
 nsurvey = 51;
 
 nsl = 11;
@@ -19,7 +19,7 @@ drawplots = true;
 
 ntstep = 5;
 
-dCP = 5;
+dCP = 3;
 
 
 % Disk radius
@@ -46,7 +46,7 @@ yu0 = ycen - lowdisk(2) * rad;
 
 
 % Length of contracting streamtube
-tubelen = 4;
+tubelen = 8;
 
 % Initial streamtube endpoints.
 xl1 = xl0 - ndisk(1) * tubelen;

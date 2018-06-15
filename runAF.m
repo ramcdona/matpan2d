@@ -49,6 +49,10 @@ kutta = true;
 
 
 names{1} = ['NACA ' num2str(dig1) num2str(dig2) num2str(dig34) ' Duct'];
+xuppts{1} = [];
+yuppts{1} = [];
+xlowpts{1} = [];
+ylowpts{1} = [];
 xepts{1} = xep;
 yepts{1} = yep;
 kuttas{1} = kutta;

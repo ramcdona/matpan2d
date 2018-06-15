@@ -46,7 +46,13 @@ for iseg = 1:nseg
     if ( props{iseg} )  % Only check props
 
         gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
-        gammas{iseg} = gammainf * ones( size( xepts{iseg} ) );
+        gammas{iseg}=[];
+        gammasup{iseg} = gammainf * ones( size( xuppts{iseg} ) );
+        gammaslow{iseg} = gammainf * ones( size( xlowpts{iseg} ) );
+    else
+        gammas{iseg}=[];
+        gammasup{iseg}=[];
+        gammaslow{iseg}=[];
     end
 end
 
@@ -76,6 +82,22 @@ for iseg=1:nseg
         xcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
         ycp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
 
+        dxup{iseg} = [];
+        dyup{iseg} = [];
+
+        dsup{iseg} = [];
+        thetaup{iseg} = [];
+        xupcp{iseg} = [];
+        yupcp{iseg} = [];
+
+        dxlow{iseg} = [];
+        dylow{iseg} = [];
+
+        dslow{iseg} = [];
+        thetalow{iseg} = [];
+        xlowcp{iseg} = [];
+        ylowcp{iseg} = [];
+
         npans{iseg} = length( xcp{iseg} );
         npan = npan + npans{iseg};
     else % Actuator disk doesn't contribute panels
@@ -100,6 +122,14 @@ for iseg=1:nseg
         thetalow{iseg} = atan2( dylow{iseg}, dxlow{iseg} );     % Panel slope angle
         xlowcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
         ylowcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
+
+        dx{iseg} = [];
+        dy{iseg} = [];
+
+        ds{iseg} = [];
+        theta{iseg} = [];
+        xcp{iseg} = [];
+        ycp{iseg} = [];
 
         npans{iseg} = 0;
     end
@@ -172,40 +202,19 @@ for iseg=1:nseg
 end
 
 opts = odeset;
-opts = odeset( opts, 'Events', @bormassevt );
+opts = odeset( opts, 'Events', @planarmassevt );
 opts = odeset( opts, 'AbsTol', 1e-5, 'RelTol', 1e-2);
+
+optssl = odeset;
+optssl = odeset( optssl, 'Events', @planarslevt );
+optssl = odeset( optssl, 'AbsTol', 1e-5, 'RelTol', 1e-2);
 
 for itstep=1:ntstep
 
     yerr = 0;
     gerr = 0;
 
-    % Re-process actuator disk geometry
-    for iseg=1:nseg
-        if( props{iseg} )
-            xep = xuppts{iseg};
-            yep = yuppts{iseg};
 
-            dxup{iseg} = xep(2:end) - xep(1:end-1);
-            dyup{iseg} = yep(2:end) - yep(1:end-1);
-
-            dsup{iseg} = sqrt( dxup{iseg}.^2 + dyup{iseg}.^2 );    % Panel arclength
-            thetaup{iseg} = atan2( dyup{iseg}, dxup{iseg} );       % Panel slope angle
-            xupcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
-            yupcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
-
-            xep = xlowpts{iseg};
-            yep = ylowpts{iseg};
-
-            dxlow{iseg} = xep(2:end) - xep(1:end-1);
-            dylow{iseg} = yep(2:end) - yep(1:end-1);
-
-            dslow{iseg} = sqrt( dxlow{iseg}.^2 + dylow{iseg}.^2 );  % Panel arclength
-            thetalow{iseg} = atan2( dylow{iseg}, dxlow{iseg} );     % Panel slope angle
-            xlowcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
-            ylowcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
-        end
-    end
 
     % Setup & Assemble RHS
     rhs = [];
@@ -279,12 +288,38 @@ for itstep=1:ntstep
         end
     end
 
-    xnew = xepts;
-    ynew = yepts;
-    gammanew = gammas;
+    xlownew = xlowpts;
+    ylownew = ylowpts;
+    xupnew = xuppts;
+    yupnew = yuppts;
+
+    gammalownew = gammaslow;
+    gammaupnew = gammasup;
+
     % Update streamtube shape
     for iseg=1:nseg
         if( props{iseg} )
+
+            figure(15)
+            plot(xlowpts{iseg}, ylowpts{iseg}, xuppts{iseg}, yuppts{iseg})
+            hold on
+            axis equal
+            drawnow
+
+
+            % Place point at disk midpoint.
+            x0 = 0.5 * ( xlowpts{iseg}(1) + xuppts{iseg}(1) );
+            y0 = 0.5 * ( ylowpts{iseg}(1) + yuppts{iseg}(1) );
+
+            % Integrate streamline 1.5 tubelens downstream.
+            s0 = tubelen * 1.5;
+            [ tsl, Xsl ] = ode45( @planardX, [0, 10], [x0 y0 0], optssl, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, s0 );
+
+            % Extract streamline down center of disk slipstream.
+            xsl = Xsl(:,1);
+            ysl = Xsl(:,2);
+
+
             % Integrate mass flow at disk
             x0 = xlowpts{iseg}(1);
             y0 = ylowpts{iseg}(1);
@@ -293,12 +328,18 @@ for itstep=1:ntstep
             dlen = sqrt( xv^2 + yv^2 );
             xv = xv / dlen;
             yv = yv / dlen;
-            
+
             mass0 = inf;
-            
+
+            % Integrate mass across 'lower' half.
             % dm = planardm( eta, mass, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, len, mass0 );
-            [ ydist, mdist ] = ode45( @planardm, [0, 1], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, mass0 );
-            mass0 = mdist(end);
+            [ tdist, mdist ] = ode45( @planardm, [0.0, 0.5], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, mass0 );
+            masslow = mdist(end);
+
+            % Integrate mass across 'upper' half.
+            [ tdist, mdist ] = ode45( @planardm, [0.5, 1.0], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, mass0 );
+            massup = mdist(end);
+
 
             gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
             Wjad = W - gammainf;
@@ -307,15 +348,35 @@ for itstep=1:ntstep
             rt = sqrt( mass0 / ( pi * Wjad ) );
 
             % Find streamtube by continuity
-            for i = 2:length(xepts{iseg})-2
-                x0 = xepts{iseg}(i);
-                [ydist, mdist, ye] = ode45( @bordm, [yemin{iseg}(i), yemax{iseg}(i)], 0, opts, W, nseg, xepts, yepts, xcp, ycp, gammas, ds, dx, props, x0, mass0 );
-                ynew{iseg}(i) = ye;
-            end
-            % Force last two points to equal tube radius
-            ynew{iseg}(end-1:end) = rt;
+            for i = 2:length(xlowpts{iseg})
 
-            [upts, vpts] = borvel( xepts{iseg}, yepts{iseg}, W, nseg, xepts, yepts, xcp, ycp, gammas, ds, dx, props );
+                [ x0, y0 ] = intersections( xsl, ysl, [xlowpts{iseg}(i) xuppts{iseg}(i)], [ylowpts{iseg}(i) yuppts{iseg}(i)], true );
+
+                xv = xlowpts{iseg}(i) - x0;
+                yv = ylowpts{iseg}(i) - y0;
+                dlen = sqrt( xv^2 + yv^2 );
+                xv = xv / dlen;
+                yv = yv / dlen;
+
+                [tdist, mdist, te] = ode45( @planardm, [0, 2], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, -masslow );
+
+                xlownew{iseg}(i) = x0 + xv * te;
+                ylownew{iseg}(i) = y0 + yv * te;
+
+                xv = xuppts{iseg}(i) - x0;
+                yv = yuppts{iseg}(i) - y0;
+                dlen = sqrt( xv^2 + yv^2 );
+                xv = xv / dlen;
+                yv = yv / dlen;
+
+                [tdist, mdist, te] = ode45( @planardm, [0, 2], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, massup );
+
+                xupnew{iseg}(i) = x0 + xv * te;
+                yupnew{iseg}(i) = y0 + yv * te;
+
+            end
+
+            [upts, vpts] = planarvel( xlowpts{iseg}, ylowpts{iseg}, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
 
             ucp = ( upts(2:end) + upts(1:end-1) ) * 0.5;
             vcp = ( vpts(2:end) + vpts(1:end-1) ) * 0.5;
@@ -324,25 +385,60 @@ for itstep=1:ntstep
             % Calculate vortex tube strength and eventual jet velocity
             gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
 
-            % Calculate new strength via: (vs*gamma)=const
-            gammanew{iseg}(1:end-1) = ( gammainf * ( W - gammainf / 2 ) ) ./ Vcp;
-            % Force last two to equal tube strength
-            gammanew{iseg}(end-1:end) = gammainf;
+%             % Calculate new strength via: (vs*gamma)=const
+%             gammanew{iseg}(1:end-1) = ( gammainf * ( W - gammainf / 2 ) ) ./ Vcp;
+%             % Force last two to equal tube strength
+%             gammanew{iseg}(end-1:end) = gammainf;
 
-            yerr = max( yerr, max( abs( yepts{iseg} - ynew{iseg} ) ) );
-            gerr = max( gerr, max( abs( gammas{iseg} - gammanew{iseg} ) ) );
+            yerr = max( yerr, max( abs( xlowpts{iseg} - xlownew{iseg} ) ) );
+            yerr = max( yerr, max( abs( ylowpts{iseg} - xlownew{iseg} ) ) );
+            yerr = max( yerr, max( abs( xuppts{iseg} - yupnew{iseg} ) ) );
+            yerr = max( yerr, max( abs( yuppts{iseg} - yupnew{iseg} ) ) );
+
+            gerr = max( gerr, max( abs( gammaslow{iseg} - gammalownew{iseg} ) ) );
+            gerr = max( gerr, max( abs( gammasup{iseg} - gammaupnew{iseg} ) ) );
 
         end
     end
 
-    yepts = ynew;
-    gammas = gammanew;
+    xlowpts = xlownew;
+    ylowpts = ylownew;
+    xuppts = xupnew;
+    yuppts = yupnew;
 
+    gammaslow = gammalownew;
+    gammasup = gammaupnew;
 
     yerrhist(itstep) = yerr;
     gerrhist(itstep) = gerr;
-end
 
+    % Re-process actuator disk geometry
+    for iseg=1:nseg
+        if( props{iseg} )
+            xep = xuppts{iseg};
+            yep = yuppts{iseg};
+
+            dxup{iseg} = xep(2:end) - xep(1:end-1);
+            dyup{iseg} = yep(2:end) - yep(1:end-1);
+
+            dsup{iseg} = sqrt( dxup{iseg}.^2 + dyup{iseg}.^2 );    % Panel arclength
+            thetaup{iseg} = atan2( dyup{iseg}, dxup{iseg} );       % Panel slope angle
+            xupcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+            yupcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
+
+            xep = xlowpts{iseg};
+            yep = ylowpts{iseg};
+
+            dxlow{iseg} = xep(2:end) - xep(1:end-1);
+            dylow{iseg} = yep(2:end) - yep(1:end-1);
+
+            dslow{iseg} = sqrt( dxlow{iseg}.^2 + dylow{iseg}.^2 );  % Panel arclength
+            thetalow{iseg} = atan2( dylow{iseg}, dxlow{iseg} );     % Panel slope angle
+            xlowcp{iseg} = 0.5 * ( xep(2:end) + xep(1:end-1) );     % Panel x center point
+            ylowcp{iseg} = 0.5 * ( yep(2:end) + yep(1:end-1) );     % Panel y center point
+        end
+    end
+end
 
 
 for iseg=1:nseg
@@ -384,7 +480,7 @@ if( drawplots )
     hold on
     for iseg=1:nseg
         if( props{iseg} )
-            plot( xepts{iseg}, yepts{iseg}, 'o-' );
+            plot( xuppts{iseg}, yuppts{iseg}, 'o-', xlowpts{iseg}, ylowpts{iseg}, 'o-' );
         end
     end
     hold off
@@ -436,11 +532,11 @@ if( drawplots )
 
     % Build component near-field survey points
     for iseg=1:nseg
-        xmin = min( xepts{iseg} );
-        xmax = max( xepts{iseg} );
+        xmin = min( [xepts{iseg}, xlowpts{iseg}, xuppts{iseg}]);
+        xmax = max( [xepts{iseg}, xlowpts{iseg}, xuppts{iseg}]);
 
-        ymin = min( yepts{iseg} );
-        ymax = max( yepts{iseg} );
+        ymin = min( [yepts{iseg}, ylowpts{iseg}, yuppts{iseg}]);
+        ymax = max( [yepts{iseg}, ylowpts{iseg}, yuppts{iseg}]);
 
         xomax = max( xomax, xmax );
         xomin = min( xomin, xmin );
@@ -488,9 +584,9 @@ if( drawplots )
                 yv = [yv yvi];
             end
         else
-            off = ydisk{iseg} * 0.1;
-            xgrd = linspace( xdisk{iseg} - off, xdisk{iseg} + off, nsurvey );
-            ygrd = linspace( ydisk{iseg} - off, ydisk{iseg} + off, nsurvey );
+            off = 0.1;
+            xgrd = linspace( min(xlowpts{iseg}(1),xuppts{iseg}(1)) - off, max(xlowpts{iseg}(1),xuppts{iseg}(1)) + off, nsurvey );
+            ygrd = linspace( min(ylowpts{iseg}(1),yuppts{iseg}(1)) - off, max(ylowpts{iseg}(1),yuppts{iseg}(1)) + off, nsurvey );
 
             [xg, yg] = meshgrid( xgrd, ygrd );
 
@@ -501,6 +597,35 @@ if( drawplots )
 
             xv = [xv xvi];
             yv = [yv yvi];
+
+
+            xgrd = linspace( min(xlowpts{iseg}) - off, max(xlowpts{iseg}) + off, nsurvey );
+            ygrd = linspace( min(ylowpts{iseg}) - off, max(ylowpts{iseg}) + off, nsurvey );
+
+            [xg, yg] = meshgrid( xgrd, ygrd );
+
+            xvi = reshape( xg, 1, [] );
+            yvi = reshape( yg, 1, [] );
+
+            yvi = yvi + rand(size(yvi))*.001-.0005;
+
+            xv = [xv xvi];
+            yv = [yv yvi];
+
+
+            xgrd = linspace( min(xuppts{iseg}) - off, max(xuppts{iseg}) + off, nsurvey );
+            ygrd = linspace( min(yuppts{iseg}) - off, max(yuppts{iseg}) + off, nsurvey );
+
+            [xg, yg] = meshgrid( xgrd, ygrd );
+
+            xvi = reshape( xg, 1, [] );
+            yvi = reshape( yg, 1, [] );
+
+            yvi = yvi + rand(size(yvi))*.001-.0005;
+
+            xv = [xv xvi];
+            yv = [yv yvi];
+
         end
     end
 
@@ -521,27 +646,27 @@ if( drawplots )
     for iseg=1:nseg
         if( props{iseg} )
 
-            % First streamtube panel length
-            len = sqrt( (xepts{iseg}(2) - xepts{iseg}(1))^2 + (yepts{iseg}(2) - yepts{iseg}(1))^2 );
-
-            ymin = min( yepts{iseg} ) - len * 2.0;
-            ymax = max( yepts{iseg} ) + len * 2.0;
-
-            mask = ( xv > xepts{iseg}(1) ) & ( xv < xepts{iseg}(end) ) & ( yv > ymin ) & ( yv < ymax );
-            xv = xv(~mask);
-            yv = yv(~mask);
-
-            xgrd = xepts{iseg};
-            ygrd = linspace( ymin, ymax, nsurvey );
-
-            [xg, yg] = meshgrid( xgrd, ygrd );
-
-            xvi = reshape( xg, 1, [] );
-            yvi = reshape( yg, 1, [] );
-            yvi = yvi + rand(size(yvi))*.001-.0005;
-
-            xv = [xv xvi];
-            yv = [yv yvi];
+%             % First streamtube panel length
+%             len = sqrt( (xepts{iseg}(2) - xepts{iseg}(1))^2 + (yepts{iseg}(2) - yepts{iseg}(1))^2 );
+% 
+%             ymin = min( yepts{iseg} ) - len * 2.0;
+%             ymax = max( yepts{iseg} ) + len * 2.0;
+% 
+%             mask = ( xv > xepts{iseg}(1) ) & ( xv < xepts{iseg}(end) ) & ( yv > ymin ) & ( yv < ymax );
+%             xv = xv(~mask);
+%             yv = yv(~mask);
+% 
+%             xgrd = xepts{iseg};
+%             ygrd = linspace( ymin, ymax, nsurvey );
+% 
+%             [xg, yg] = meshgrid( xgrd, ygrd );
+% 
+%             xvi = reshape( xg, 1, [] );
+%             yvi = reshape( yg, 1, [] );
+%             yvi = yvi + rand(size(yvi))*.001-.0005;
+% 
+%             xv = [xv xvi];
+%             yv = [yv yvi];
         end
     end
 
@@ -607,48 +732,48 @@ if( drawplots )
 
     for iseg=1:nseg
         if( props{iseg} )
-            xst = xepts{iseg};
-            yst = yepts{iseg};
-
-            xst = [xst xst(end)+10 xst(end)+10];
-            yst = [yst yst(end) 0];                    %%%%%%  Likely crap
-
-            if ( xdisk{jseg} ~= xst(1) )
-                xst = [xdisk{jseg} xdisk{jseg} xst];
-                yst = [ 0  ydisk{jseg} yst];
-            else
-                xst = [xst(1) xst];
-                yst = [ 0 yst];
-            end
-
-
-            % Forces open polys to be closed
-            % Signed minimum distance -- negative is inside.
-            [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, yv, xst, yst, true );
-
-            mask = dmin <= 0.0;
-
-            Cpv(mask) = Cpv(mask) + deltaCP{iseg};
+%             xst = xepts{iseg};
+%             yst = yepts{iseg};
+% 
+%             xst = [xst xst(end)+10 xst(end)+10];
+%             yst = [yst yst(end) 0];                    %%%%%%  Likely crap
+% 
+%             if ( xdisk{jseg} ~= xst(1) )
+%                 xst = [xdisk{jseg} xdisk{jseg} xst];
+%                 yst = [ 0  ydisk{jseg} yst];
+%             else
+%                 xst = [xst(1) xst];
+%                 yst = [ 0 yst];
+%             end
+% 
+% 
+%             % Forces open polys to be closed
+%             % Signed minimum distance -- negative is inside.
+%             [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, yv, xst, yst, true );
+% 
+%             mask = dmin <= 0.0;
+% 
+%             Cpv(mask) = Cpv(mask) + deltaCP{iseg};
 
         end
     end
 end  % if( drawplots )
 
-% if ( drawplots )
-%     verbose = 0;  % flag to report progress
-%     maxits = 1e4; % maximum number of iterations
-%     Ltol = 0.01;  % flowpath "out-of-triangle" tolerance
-%     dLtol = 0.5;  % flowpath "curvature" tolerance
-% 
-%     ysl = linspace( min(ylim), max(ylim), nsl);
-%     % ysl(1) = ysl(2) * 0.1;
-%     xsl = min(xlim) * ones( size(ysl) ) + .01;
-% 
-%     FlowP = TriStream( tri, xv, yv, uv, vv, xsl, ysl, verbose, maxits, Ltol, dLtol );
-% 
-%     xcap = [];
-%     ycap = [];
-% 
+if ( drawplots )
+    verbose = 0;  % flag to report progress
+    maxits = 1e4; % maximum number of iterations
+    Ltol = 0.01;  % flowpath "out-of-triangle" tolerance
+    dLtol = 0.5;  % flowpath "curvature" tolerance
+
+    ysl = linspace( min(ylim), max(ylim), nsl);
+    % ysl(1) = ysl(2) * 0.1;
+    xsl = min(xlim) * ones( size(ysl) ) + .01;
+
+    FlowP = TriStream( tri, xv, yv, uv, vv, xsl, ysl, verbose, maxits, Ltol, dLtol );
+
+    xcap = [];
+    ycap = [];
+
 %     for iseg=1:nseg
 %         if( props{iseg} )
 %             % Integrate mass flow at disk
@@ -732,7 +857,7 @@ end  % if( drawplots )
 %             Afarcap = pi * yfarcap.^2;
 %         end
 %     end
-% end
+end
 
 % Calculate maximum error for cases with exact isolated solution
 for iseg=1:nseg
@@ -763,7 +888,7 @@ if( drawplots )
     quiver( xv, yv, uv, vv )
     hold on
     for iseg=1:nseg
-        plot( xepts{iseg}, yepts{iseg} );
+        plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
     end
     hold off
     axis equal
@@ -773,7 +898,7 @@ if( drawplots )
     trisurf( tri(IO,:), xv, yv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     for iseg=1:nseg
-        plot( xepts{iseg}, yepts{iseg} );
+        plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
     end
     hold off
     axis equal
@@ -785,7 +910,7 @@ if( drawplots )
     trisurf( tri(IO,:), xv, yv, zeros(size(xv)), Cpv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
     for iseg=1:nseg
-        plot( xepts{iseg}, yepts{iseg} );
+        plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
     end
     hold off
     axis equal
@@ -793,13 +918,13 @@ if( drawplots )
     title('Cp')
 
     figure(8)
-%    PlotTriStream( FlowP );
+    PlotTriStream( FlowP );
     if( exist( 'FlowPStreamtube', 'var' ) )
         PlotTriStream( FlowPStreamtube );
     end
     hold on
     for iseg=1:nseg
-        plot( xepts{iseg}, yepts{iseg} );
+        plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
     end
     hold off
     axis equal
@@ -807,14 +932,14 @@ if( drawplots )
     figure(9)
     trisurf( tri(IO,:), xv, yv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
     hold on
-%    PlotTriStream( FlowP, 'k' );
+    PlotTriStream( FlowP, 'k' );
     hold on;
     if( exist( 'FlowPStreamtube', 'var' ) )
         PlotTriStream( FlowPStreamtube, 'k' );
     end
     hold on;  % PlotTriStream turns hold off.
     for iseg=1:nseg
-        plot( xepts{iseg}, yepts{iseg},'k' );
+        plot( xepts{iseg}, yepts{iseg},'k', xuppts{iseg}, yuppts{iseg}, 'k', xlowpts{iseg}, ylowpts{iseg}, 'k' );
     end
     hold off
     axis equal
@@ -852,7 +977,7 @@ if( drawplots )
     trimesh( tri(IO,:), xv, yv, zeros(size(xv)) );
     hold on
     for iseg=1:nseg
-        plot( xepts{iseg}, yepts{iseg},'k','LineWidth', 2.0 );
+        plot( xepts{iseg}, yepts{iseg},'k', xuppts{iseg}, yuppts{iseg}, 'k', xlowpts{iseg}, ylowpts{iseg} ,'k', 'LineWidth', 2.0 );
     end
     axis equal
     view(0,90)
@@ -865,7 +990,7 @@ if( drawplots )
         hold on
         for iseg = 1:nseg
              if ( props{iseg} )
-                plot( xepts{iseg}, yepts{iseg}, xepts{iseg}, yemin{iseg}, 'LineWidth', lw )
+                plot( xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg}, 'LineWidth', lw )
             end
         end
         hold off
