@@ -203,11 +203,11 @@ end
 
 opts = odeset;
 opts = odeset( opts, 'Events', @planarmassevt );
-opts = odeset( opts, 'AbsTol', 1e-5, 'RelTol', 1e-2);
+opts = odeset( opts, 'AbsTol', 1e-8, 'RelTol', 1e-5,'MaxStep',1e-2);
 
 optssl = odeset;
 optssl = odeset( optssl, 'Events', @planarslevt );
-optssl = odeset( optssl, 'AbsTol', 1e-5, 'RelTol', 1e-2);
+optssl = odeset( optssl, 'AbsTol', 1e-8, 'RelTol', 1e-5,'MaxStep',1e-2);
 
 for itstep=1:ntstep
 
@@ -318,7 +318,12 @@ for itstep=1:ntstep
             % Extract streamline down center of disk slipstream.
             xsl = Xsl(:,1);
             ysl = Xsl(:,2);
+            ssl = Xsl(:,3);
+%            dssl = sqrt((xsl(2:end)-xsl(1:end-1)).^2 + (ysl(2:end)-ysl(1:end-1)).^2 );
+%            ssl = [0; cumsum(dssl)];
 
+            plot(xsl,ysl,'--');
+            drawnow
 
             % Integrate mass flow at disk
             x0 = xlowpts{iseg}(1);
@@ -340,42 +345,170 @@ for itstep=1:ntstep
             [ tdist, mdist ] = ode45( @planardm, [0.5, 1.0], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, mass0 );
             massup = mdist(end);
 
-
-            gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
+            % Calculate vortex tube strength and eventual jet velocity
+            % gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
             Wjad = W - gammainf;
+ 
+            % Set vortex tube height based on jet velocity and mass flow
+            hlow = masslow / Wjad;
+            hup = massup / Wjad;
 
-            % Set vortex tube radius based on jet velocity and mass flow
-            rt = sqrt( mass0 / ( pi * Wjad ) );
+            if ( itstep < 0 )
+                
+                if (true)
+                   
+                    i = 1;
+                    p = InterX( [xsl; ysl], [xlowpts{iseg}(i) xuppts{iseg}(i); ylowpts{iseg}(i) yuppts{iseg}(i)] );
+                    x0 = p(1,:)';
+                    y0 = p(2,:)';
 
-            % Find streamtube by continuity
-            for i = 2:length(xlowpts{iseg})
+%                     [u, v] = planarvel( x0, y0, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
+                    
+                    xv = xlowpts{iseg}(i) - x0;
+                    yv = ylowpts{iseg}(i) - y0;
+                    dlen = sqrt( xv^2 + yv^2 );
+                    xv = xv / dlen;
+                    yv = yv / dlen;
 
-                [ x0, y0 ] = intersections( xsl, ysl, [xlowpts{iseg}(i) xuppts{iseg}(i)], [ylowpts{iseg}(i) yuppts{iseg}(i)], true );
+                    
+                    te = [];
+                    tend = 3;
+                    while isempty(te)
+                        [tdist, mdist, te] = ode45( @planardm, [0, tend], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, 1, -masslow );
+                        tend = 2 * tend;
+                    end
+                    
+                    xtest = x0 + xv * te;
+                    ytest = y0 + yv * te;
+                    
+                    
+                    
+                    plot(xtest,ytest,'x')
+                    text(xtest,ytest,num2str(itstep));
 
-                xv = xlowpts{iseg}(i) - x0;
-                yv = ylowpts{iseg}(i) - y0;
-                dlen = sqrt( xv^2 + yv^2 );
-                xv = xv / dlen;
-                yv = yv / dlen;
+                    
+                    
+                    
+                    xv = xuppts{iseg}(i) - x0;
+                    yv = yuppts{iseg}(i) - y0;
+                    dlen = sqrt( xv^2 + yv^2 );
+                    xv = xv / dlen;
+                    yv = yv / dlen;
+                    
+                    te = [];
+                    tend = 3;
+                    while isempty(te)
+                        [tdist, mdist, te] = ode45( @planardm, [0, tend], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, 1, massup );
+                        tend = 2 * tend;
+                    end
+                    
+                    
+                    xtest = x0 + xv * te;
+                    ytest = y0 + yv * te;
+                    
+                    disp([xtest ytest xuppts{iseg}(i) yuppts{iseg}(i)])
+                    
+                    plot(xtest,ytest,'x')
+                    text(xtest,ytest,num2str(itstep));
 
-                [tdist, mdist, te] = ode45( @planardm, [0, 2], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, -masslow );
+                end
+                
+                
+                for i = 2:length(xlowpts{iseg})-1
+                    p = InterX( [xsl; ysl], [xlowpts{iseg}(i) xuppts{iseg}(i); ylowpts{iseg}(i) yuppts{iseg}(i)] );
+                    x0 = p(1,:)';
+                    y0 = p(2,:)';
+                    
+                    [u, v] = planarvel( x0, y0, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
+                    
+                    xv = xlowpts{iseg}(i) - x0;
+                    yv = ylowpts{iseg}(i) - y0;
+                    dlen = sqrt( xv^2 + yv^2 );
+                    xv = xv / dlen;
+                    yv = yv / dlen;
+                   
+                    dm = ( u * yv + v * xv );
+                    rlow = -masslow/dm;
+                    
+                    xlownew{iseg}(i) = x0 + xv * rlow;
+                    ylownew{iseg}(i) = y0 + yv * rlow;
 
-                xlownew{iseg}(i) = x0 + xv * te;
-                ylownew{iseg}(i) = y0 + yv * te;
+                    xv = xuppts{iseg}(i) - x0;
+                    yv = yuppts{iseg}(i) - y0;
+                    dlen = sqrt( xv^2 + yv^2 );
+                    xv = xv / dlen;
+                    yv = yv / dlen;
 
-                xv = xuppts{iseg}(i) - x0;
-                yv = yuppts{iseg}(i) - y0;
-                dlen = sqrt( xv^2 + yv^2 );
-                xv = xv / dlen;
-                yv = yv / dlen;
+                    dm = ( u * yv + v * xv );
+                    rup = massup/dm;
 
-                [tdist, mdist, te] = ode45( @planardm, [0, 2], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, dlen, massup );
-
-                xupnew{iseg}(i) = x0 + xv * te;
-                yupnew{iseg}(i) = y0 + yv * te;
-
+                    xupnew{iseg}(i) = x0 + xv * rup;
+                    yupnew{iseg}(i) = y0 + yv * rup;
+                end
+            else
+                % Find streamtube by continuity
+                for i = 2:length(xlowpts{iseg})-1
+                    
+                    p = InterX( [xsl; ysl], [xlowpts{iseg}(i) xuppts{iseg}(i); ylowpts{iseg}(i) yuppts{iseg}(i)] );
+                    x0 = p(1,:)';
+                    y0 = p(2,:)';
+                    
+                    xv = xlowpts{iseg}(i) - x0;
+                    yv = ylowpts{iseg}(i) - y0;
+                    dlen = sqrt( xv^2 + yv^2 );
+                    xv = xv / dlen;
+                    yv = yv / dlen;
+                    
+                    te = [];
+                    tend = 3;
+                    while isempty(te)
+                        [tdist, mdist, te] = ode45( @planardm, [0, tend], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, 1, -masslow );
+                        tend = 2 * tend;
+                    end
+                    
+                    xlownew{iseg}(i) = x0 + xv * te;
+                    ylownew{iseg}(i) = y0 + yv * te;
+                    
+                    xv = xuppts{iseg}(i) - x0;
+                    yv = yuppts{iseg}(i) - y0;
+                    dlen = sqrt( xv^2 + yv^2 );
+                    xv = xv / dlen;
+                    yv = yv / dlen;
+                    
+                    te = [];
+                    tend = 3;
+                    while isempty(te)
+                        [tdist, mdist, te] = ode45( @planardm, [0, tend], 0, opts, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props, x0, y0, xv, yv, 1, massup );
+                        tend = 2 * tend;
+                    end
+                    
+                    xupnew{iseg}(i) = x0 + xv * te;
+                    yupnew{iseg}(i) = y0 + yv * te;
+                    
+                end
             end
 
+            for i = length(xlowpts{iseg})  % (length(xlowpts{iseg})-1):length(xlowpts{iseg})
+
+                p = InterX( [xsl; ysl], [xlowpts{iseg}(i) xuppts{iseg}(i); ylowpts{iseg}(i) yuppts{iseg}(i)] );
+                x0 = p(1,:)';
+                y0 = p(2,:)';
+
+                xv = lowtube(1);
+                yv = lowtube(2);
+            
+                xlownew{iseg}(i) = x0 + xv * hlow;
+                ylownew{iseg}(i) = y0 + yv * hlow;
+            
+
+                xv = -lowtube(1);
+                yv = -lowtube(2);
+                
+                xupnew{iseg}(i) = x0 + xv * hup;
+                yupnew{iseg}(i) = y0 + yv * hup;
+
+            end
+            
             [upts, vpts] = planarvel( xlowpts{iseg}, ylowpts{iseg}, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
 
             ucp = ( upts(2:end) + upts(1:end-1) ) * 0.5;
@@ -383,16 +516,32 @@ for itstep=1:ntstep
             Vcp = sqrt( ucp.^2 + vcp.^2 );
 
             % Calculate vortex tube strength and eventual jet velocity
-            gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
+            % gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
 
-%             % Calculate new strength via: (vs*gamma)=const
-%             gammanew{iseg}(1:end-1) = ( gammainf * ( W - gammainf / 2 ) ) ./ Vcp;
-%             % Force last two to equal tube strength
-%             gammanew{iseg}(end-1:end) = gammainf;
+            % Calculate new strength via: (vs*gamma)=const
+            gammalownew{iseg}(1:end-1) = ( gammainf * ( W - gammainf / 2 ) ) ./ Vcp;
+            % Force last two to equal tube strength
+            gammalownew{iseg}(end-1:end) = gammainf;
 
+            
+            [upts, vpts] = planarvel( xuppts{iseg}, yuppts{iseg}, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
+
+            ucp = ( upts(2:end) + upts(1:end-1) ) * 0.5;
+            vcp = ( vpts(2:end) + vpts(1:end-1) ) * 0.5;
+            Vcp = sqrt( ucp.^2 + vcp.^2 );
+
+            % Calculate vortex tube strength and eventual jet velocity
+            % gammainf = - W * ( sqrt( deltaCP{iseg} + 1 ) - 1 );
+
+            % Calculate new strength via: (vs*gamma)=const
+            gammaupnew{iseg}(1:end-1) = ( gammainf * ( W - gammainf / 2 ) ) ./ Vcp;
+            % Force last two to equal tube strength
+            gammaupnew{iseg}(end-1:end) = gammainf;            
+            
+            
             yerr = max( yerr, max( abs( xlowpts{iseg} - xlownew{iseg} ) ) );
-            yerr = max( yerr, max( abs( ylowpts{iseg} - xlownew{iseg} ) ) );
-            yerr = max( yerr, max( abs( xuppts{iseg} - yupnew{iseg} ) ) );
+            yerr = max( yerr, max( abs( ylowpts{iseg} - ylownew{iseg} ) ) );
+            yerr = max( yerr, max( abs( xuppts{iseg} - xupnew{iseg} ) ) );
             yerr = max( yerr, max( abs( yuppts{iseg} - yupnew{iseg} ) ) );
 
             gerr = max( gerr, max( abs( gammaslow{iseg} - gammalownew{iseg} ) ) );
@@ -447,19 +596,12 @@ for iseg=1:nseg
 
         for jseg=1:nseg
             if( props{jseg} )
-                xst = xepts{jseg};
-                yst = yepts{jseg};
-
-                xst = [xst xst(end)+10 xst(end)+10];
-                yst = [yst yst(end) 0];
-
-                if ( xdisk{jseg} ~= xst(1) )
-                    xst = [xdisk{jseg} xdisk{jseg} xst];
-                    yst = [ 0  ydisk{jseg} yst];
-                else
-                    xst = [xst(1) xst];
-                    yst = [ 0 yst];
-                end
+                
+                xst = [fliplr(xlowpts{jseg}) xuppts{jseg}];
+                yst = [fliplr(ylowpts{jseg}) yuppts{jseg}];
+                
+                xst = [xst(1)+30 xst xst(end)+30];
+                yst = [yst(1) yst yst(end)];
 
                 % Forces open polys to be closed
                 % Signed minimum distance -- negative is inside.
@@ -646,27 +788,63 @@ if( drawplots )
     for iseg=1:nseg
         if( props{iseg} )
 
-%             % First streamtube panel length
-%             len = sqrt( (xepts{iseg}(2) - xepts{iseg}(1))^2 + (yepts{iseg}(2) - yepts{iseg}(1))^2 );
-% 
-%             ymin = min( yepts{iseg} ) - len * 2.0;
-%             ymax = max( yepts{iseg} ) + len * 2.0;
-% 
-%             mask = ( xv > xepts{iseg}(1) ) & ( xv < xepts{iseg}(end) ) & ( yv > ymin ) & ( yv < ymax );
-%             xv = xv(~mask);
-%             yv = yv(~mask);
-% 
-%             xgrd = xepts{iseg};
-%             ygrd = linspace( ymin, ymax, nsurvey );
-% 
-%             [xg, yg] = meshgrid( xgrd, ygrd );
-% 
-%             xvi = reshape( xg, 1, [] );
-%             yvi = reshape( yg, 1, [] );
-%             yvi = yvi + rand(size(yvi))*.001-.0005;
-% 
-%             xv = [xv xvi];
-%             yv = [yv yvi];
+            % First streamtube panel length
+            len = sqrt( (xlowpts{iseg}(2) - xlowpts{iseg}(1))^2 + (ylowpts{iseg}(2) - ylowpts{iseg}(1))^2 );
+
+            % Find minimum distance between any streamtube center point and
+            % any survey point.
+            dup = min( sqrt((xupcp{iseg}-xv').^2+(yupcp{iseg}-yv').^2), [], 2 );
+            
+            mask = dup < ( len / 2.0 );
+            xv = xv(~mask);
+            yv = yv(~mask);
+            
+            dlow = min( sqrt((xlowcp{iseg}-xv').^2+(ylowcp{iseg}-yv').^2), [], 2 );
+            
+            mask = dlow < ( len / 2.0 );
+            xv = xv(~mask);
+            yv = yv(~mask);
+
+            xl = xlowpts{iseg};
+            xu = xuppts{iseg};
+            yl = ylowpts{iseg};
+            yu = yuppts{iseg};
+            
+            xuv = xu-xl;
+            yuv = yu-yl;
+            luv = sqrt( xuv.^2 + yuv.^2 );
+            xuv = xuv./luv;
+            yuv = yuv./luv;
+            
+            len = 0.2;
+            xl = xl - xuv * len;
+            xu = xu + xuv * len;
+            yl = yl - yuv * len;
+            yu = yu + yuv * len;
+            
+            xst = [fliplr(xl) xu];
+            yst = [fliplr(yl) yu];
+           
+%             xst = [xst(1) xst xst(end)];
+%             yst = [yst(1) yst yst(end)];
+
+            % Forces open polys to be closed
+            % Signed minimum distance -- negative is inside.
+            [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, yv, xst, yst, true );
+
+            mask = dmin <= 0.0;
+            
+            xv = xv(~mask);
+            yv = yv(~mask);
+            
+            
+            
+            for i=1:length(xl)
+                % Add streamtube points
+                xv = [xv linspace(xl(i), xu(i), nsurvey)];
+                yv = [yv linspace(yl(i), yu(i), nsurvey)];
+            end
+            
         end
     end
 
@@ -732,28 +910,20 @@ if( drawplots )
 
     for iseg=1:nseg
         if( props{iseg} )
-%             xst = xepts{iseg};
-%             yst = yepts{iseg};
-% 
-%             xst = [xst xst(end)+10 xst(end)+10];
-%             yst = [yst yst(end) 0];                    %%%%%%  Likely crap
-% 
-%             if ( xdisk{jseg} ~= xst(1) )
-%                 xst = [xdisk{jseg} xdisk{jseg} xst];
-%                 yst = [ 0  ydisk{jseg} yst];
-%             else
-%                 xst = [xst(1) xst];
-%                 yst = [ 0 yst];
-%             end
-% 
-% 
-%             % Forces open polys to be closed
-%             % Signed minimum distance -- negative is inside.
-%             [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, yv, xst, yst, true );
-% 
-%             mask = dmin <= 0.0;
-% 
-%             Cpv(mask) = Cpv(mask) + deltaCP{iseg};
+
+            xst = [fliplr(xlowpts{iseg}) xuppts{iseg}];
+            yst = [fliplr(ylowpts{iseg}) yuppts{iseg}];
+            
+            xst = [xst(1)+30 xst xst(end)+30];
+            yst = [yst(1) yst yst(end)];
+
+            % Forces open polys to be closed
+            % Signed minimum distance -- negative is inside.
+            [dmin, x_d_min, y_d_min, is_vertex, idx_c] = p_poly_dist( xv, yv, xst, yst, true );
+
+            mask = dmin <= 0.0;
+
+            Cpv(mask) = Cpv(mask) + deltaCP{iseg};
 
         end
     end
@@ -765,11 +935,11 @@ if ( drawplots )
     Ltol = 0.01;  % flowpath "out-of-triangle" tolerance
     dLtol = 0.5;  % flowpath "curvature" tolerance
 
-    ysl = linspace( min(ylim), max(ylim), nsl);
+    ystl = linspace( min(ylim), max(ylim), nsl);
     % ysl(1) = ysl(2) * 0.1;
-    xsl = min(xlim) * ones( size(ysl) ) + .01;
+    xstl = min(xlim) * ones( size(ystl) ) + .01;
 
-    FlowP = TriStream( tri, xv, yv, uv, vv, xsl, ysl, verbose, maxits, Ltol, dLtol );
+    FlowP = TriStream( tri, xv, yv, uv, vv, xstl, ystl, verbose, maxits, Ltol, dLtol );
 
     xcap = [];
     ycap = [];
@@ -923,6 +1093,7 @@ if( drawplots )
         PlotTriStream( FlowPStreamtube );
     end
     hold on
+    plot(xsl,ysl,'--')
     for iseg=1:nseg
         plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
     end
@@ -934,6 +1105,7 @@ if( drawplots )
     hold on
     PlotTriStream( FlowP, 'k' );
     hold on;
+    plot(xsl,ysl,'--')
     if( exist( 'FlowPStreamtube', 'var' ) )
         PlotTriStream( FlowPStreamtube, 'k' );
     end

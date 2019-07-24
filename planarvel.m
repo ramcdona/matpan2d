@@ -31,26 +31,8 @@ for isurvey = 1:nsurvey
             uv = uv - sum( uj .* gammaslow{iseg}(mask) .* dslow{iseg} .* sign(dxlow{iseg}) );
             vv = vv - sum( vj .* gammaslow{iseg}(mask) .* dslow{iseg} .* sign(dxlow{iseg}) );
 
-
-
-            xvu = xuppts{iseg}(end) - xuppts{iseg}(end - 1);
-            yvu = yuppts{iseg}(end) - yuppts{iseg}(end - 1);
-            dsu = sqrt( xvu.^2 + yvu.^2 );
-            xvu = xvu ./ dsu;
-            yvu = yvu ./ dsu;
-
-            xvl = xlowpts{iseg}(end) - xlowpts{iseg}(end - 1);
-            yvl = ylowpts{iseg}(end) - ylowpts{iseg}(end - 1);
-            dsl = sqrt( xvl.^2 + yvl.^2 );
-            xvl = xvl ./ dsl;
-            yvl = yvl ./ dsl;
-
-            xv = 0.5 * (xvu + xvl);
-            yv = 0.5 * (yvu + yvl);
-            ds = sqrt( xv.^2 + yv.^2 );
-            xv = xv ./ ds;
-            yv = yv ./ ds;
-
+            xv = 1;
+            yv = 0;
 
             [ uj, vj ] = rayptvortex( xuppts{iseg}(end), yuppts{iseg}(end), xv, yv, x(isurvey), y(isurvey) );
 
