@@ -662,6 +662,45 @@ if( drawplots )
     legend( 'Streamtube residual', 'Gamma residual' )
     hold off
 
+    
+    
+    figure(25)
+    clf
+    
+    subplot(2,1,1)
+    hold on
+    for iseg=1:nseg
+        if( ~props{iseg} )
+            plot( xcp{iseg}, -Cp{iseg},'k','LineWidth',1.5 );
+        end
+    end
+    hold off
+    ylabel('-C_p')
+    axis([-2 3 -1 5])
+%    set(gca,'xtick',[])
+%    axes('XColor','none');
+    ax1=gca;
+    ax1.XAxis.Visible = 'off';
+    
+    subplot(2,1,2)
+    hold on
+    for iseg=1:nseg
+        plot( xepts{iseg}, yepts{iseg}, 'k', 'LineWidth', 1.5 );
+    end
+    
+    for iseg=1:nseg
+        if( props{iseg} )
+            plot( xuppts{iseg}, yuppts{iseg}, 'k', xlowpts{iseg}, ylowpts{iseg}, 'k', 'LineWidth',1.5 );
+        end
+    end
+    hold off
+    axis([-2 3 -.5 1])
+    axis equal
+    axis off
+
+    
+    
+    
 end
 
 drawnow
