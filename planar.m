@@ -1033,13 +1033,13 @@ if ( drawplots )
 %     end
 end
 
-% Calculate maximum error for cases with exact isolated solution
-for iseg=1:nseg
-    if ( ~isnan( Vexs{iseg}(1) ) )
-        err = Vexs{iseg} - gammas{iseg};
-        disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
-    end
-end
+% % Calculate maximum error for cases with exact isolated solution
+% for iseg=1:nseg
+%     if ( ~isnan( Vexs{iseg}(1) ) )
+%         err = Vexs{iseg} - gammas{iseg};
+%         disp(['Maximum velocity error:  ' num2str(max(abs(err))) ]);
+%     end
+% end
 
 % Post-process axial force.
 CDi = [];
