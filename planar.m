@@ -666,6 +666,8 @@ end
 
 drawnow
 
+drawplots = drawmoreplots;
+
 % Post-process velocity survey.
 if( drawplots )
     xv = [];
