@@ -1043,18 +1043,23 @@ end
 
 % Post-process axial force.
 CDi = [];
+CLi = [];
 CD = 0.0;
+CL = 0.0;
 for iseg=1:nseg
     if( ~props{iseg} )
 
-        CDi{iseg} = - 2.0 * pi * sum( Cp{iseg} .* sin( theta{iseg} ) .* ycp{iseg} .* ds{iseg} ) / Sref;
+        CDi{iseg} = - sum( Cp{iseg} .* sin( theta{iseg} ) .* ds{iseg} ) / Sref;
         CD = CD + CDi{iseg};
 
-        disp(['CD on ' names{iseg} ':  ' num2str(CDi{iseg})])
+        CLi{iseg} = - sum( Cp{iseg} .* cos( theta{iseg} ) .* ds{iseg} ) / Sref;
+        CL = CL + CLi{iseg};
+        
+        disp(['CD on ' names{iseg} ':  ' num2str(CDi{iseg}) '  CL on ' names{iseg} ':  ' num2str(CLi{iseg})])
     end
 end
 
-disp(['CD total:  ' num2str(CD)])
+disp(['CD total:  ' num2str(CD) ' CL total:  ' num2str(CL)])
 
 if( drawplots )
 
