@@ -1096,36 +1096,36 @@ if( drawplots )
     view(0,90)
     title('Cp')
 
-    figure(8)
-    PlotTriStream( FlowP );
-    if( exist( 'FlowPStreamtube', 'var' ) )
-        PlotTriStream( FlowPStreamtube );
-    end
-    hold on
-    plot(xsl,ysl,'--')
-    for iseg=1:nseg
-        plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
-    end
-    hold off
-    axis equal
+%     figure(8)
+%     PlotTriStream( FlowP );
+%     if( exist( 'FlowPStreamtube', 'var' ) )
+%         PlotTriStream( FlowPStreamtube );
+%     end
+%     hold on
+%     plot(xsl,ysl,'--')
+%     for iseg=1:nseg
+%         plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
+%     end
+%     hold off
+%     axis equal
 
-    figure(9)
-    trisurf( tri(IO,:), xv, yv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
-    hold on
-    PlotTriStream( FlowP, 'k' );
-    hold on;
-    plot(xsl,ysl,'--')
-    if( exist( 'FlowPStreamtube', 'var' ) )
-        PlotTriStream( FlowPStreamtube, 'k' );
-    end
-    hold on;  % PlotTriStream turns hold off.
-    for iseg=1:nseg
-        plot( xepts{iseg}, yepts{iseg},'k', xuppts{iseg}, yuppts{iseg}, 'k', xlowpts{iseg}, ylowpts{iseg}, 'k' );
-    end
-    hold off
-    axis equal
-    view(0,90)
-    title('v/Vinf')
+%     figure(9)
+%     trisurf( tri(IO,:), xv, yv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
+%     hold on
+%     PlotTriStream( FlowP, 'k' );
+%     hold on;
+%     plot(xsl,ysl,'--')
+%     if( exist( 'FlowPStreamtube', 'var' ) )
+%         PlotTriStream( FlowPStreamtube, 'k' );
+%     end
+%     hold on;  % PlotTriStream turns hold off.
+%     for iseg=1:nseg
+%         plot( xepts{iseg}, yepts{iseg},'k', xuppts{iseg}, yuppts{iseg}, 'k', xlowpts{iseg}, ylowpts{iseg}, 'k' );
+%     end
+%     hold off
+%     axis equal
+%     view(0,90)
+%     title('v/Vinf')
 
 
 %     xsurvey = [-1 0 1 2 4];
