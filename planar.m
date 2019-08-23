@@ -633,8 +633,12 @@ if( drawplots )
     hold on
     for iseg=1:nseg
         if( ~props{iseg} )
-            plot( xcp{iseg}, gammas{iseg}, 'o-' )
-            plot( xcp{iseg}, Vexs{iseg} )
+            plot( xcp{iseg}, gammas{iseg}, 'o' )
+            if ( length(xepts{iseg}) == length(Vexs{iseg}) )
+                plot( xepts{iseg}, Vexs{iseg} )
+            else
+                plot( xcp{iseg}, Vexs{iseg} )
+            end
         end
     end
     hold off
