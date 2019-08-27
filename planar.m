@@ -220,7 +220,7 @@ for itstep=1:ntstep
     rhs = [];
     for iseg=1:nseg
         if ( ~props{iseg} ) % 'Normal' components
-            rhss{iseg} = -W * cos( theta{iseg} );
+            rhss{iseg} = -W{iseg} * cos( theta{iseg} );
 
             for jseg=1:nseg
                 if ( props{jseg} )
@@ -676,7 +676,7 @@ if( drawplots )
     end
     hold off
     ylabel('-C_p')
-    axis([-2 3 -1 5])
+    axis([-3 4 -1 10])
 %    set(gca,'xtick',[])
 %    axes('XColor','none');
     ax1=gca;
@@ -694,7 +694,7 @@ if( drawplots )
         end
     end
     hold off
-    axis([-2 3 -.5 1])
+    axis([-3 4 -.5 1])
     axis equal
     axis off
 
@@ -915,7 +915,9 @@ if( drawplots )
         end
     end
 
-    [uv, vv] = planarvel( xv, yv, W, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
+%% Note, Wfield is reference frame for field velocity calculations.
+
+    [uv, vv] = planarvel( xv, yv, Wfield, nseg, xepts, yepts, xuppts, yuppts, xlowpts, ylowpts, xcp, ycp, xupcp, yupcp, xlowcp, ylowcp, gammas, gammasup, gammaslow, ds, dsup, dslow, dx, dxup, dxlow, props );
 
     xv = xv( ~inv );
     yv = yv( ~inv );
@@ -1143,57 +1145,62 @@ if( drawplots )
         PlotTriStream( FlowPStreamtube );
     end
     hold on
-%    plot(xsl,ysl,'--')
+    if( exist( 'xsl', 'var' ) )
+        plot(xsl,ysl,'--')
+    end
     for iseg=1:nseg
         plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
     end
     hold off
     axis equal
 
-%     figure(9)
-%     trisurf( tri(IO,:), xv, yv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
-%     hold on
-%     PlotTriStream( FlowP, 'k' );
-%     hold on;
-%     plot(xsl,ysl,'--')
-%     if( exist( 'FlowPStreamtube', 'var' ) )
-%         PlotTriStream( FlowPStreamtube, 'k' );
-%     end
-%     hold on;  % PlotTriStream turns hold off.
-%     for iseg=1:nseg
-%         plot( xepts{iseg}, yepts{iseg},'k', xuppts{iseg}, yuppts{iseg}, 'k', xlowpts{iseg}, ylowpts{iseg}, 'k' );
-%     end
-%     hold off
-%     axis equal
-%     view(0,90)
-%     title('v/Vinf')
+    figure(9)
+    trisurf( tri(IO,:), xv, yv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
+    hold on
+    PlotTriStream( FlowP, 'k' );
+    hold on;
+    if( exist( 'xsl', 'var' ) )
+        plot(xsl,ysl,'--')
+    end
+    if( exist( 'FlowPStreamtube', 'var' ) )
+        PlotTriStream( FlowPStreamtube, 'k' );
+    end
+    hold on;  % PlotTriStream turns hold off.
+    for iseg=1:nseg
+        plot( xepts{iseg}, yepts{iseg},'k', xuppts{iseg}, yuppts{iseg}, 'k', xlowpts{iseg}, ylowpts{iseg}, 'k' );
+    end
+    hold off
+    axis equal
+    view(0,90)
+    title('v/Vinf')
 
 
-%     xsurvey = [-1 0 1 2 4];
-%
-%     for i=1:length(xsurvey);
-%         mask = ( xv == xsurvey(i) );
-%
-%         r = rv(mask);
-%         v = vv(mask);
-%         u = uv(mask);
-%
-%         [r, indx] = sort( r );
-%         v = v(indx);
-%         u = u(indx);
-%
-%         figure(10)
-%         plot( v, r )
-%         hold on
-%
-%         figure(11)
-%         plot( u, r );
-%         hold on
-%     end
-%     figure(10)
-%     hold off
-%     figure(11)
-%     hold off
+
+    xsurvey = [-1 0 1 2 4];
+
+    for i=1:length(xsurvey);
+        mask = ( xv == xsurvey(i) );
+
+        y = yv(mask);
+        v = vv(mask);
+        u = uv(mask);
+
+        [y, indx] = sort( y );
+        v = v(indx);
+        u = u(indx);
+
+        figure(10)
+        plot( v, y )
+        hold on
+
+        figure(11)
+        plot( u, y );
+        hold on
+    end
+    figure(10)
+    hold off
+    figure(11)
+    hold off
 
     figure(12)
     trimesh( tri(IO,:), xv, yv, zeros(size(xv)) );

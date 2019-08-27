@@ -6,7 +6,7 @@ function [u, v] = planarvel( x, y, W, nseg, xepts, yepts, xuppts, yuppts, xlowpt
 % problem is made of many point vortices which may be treated as vectors.
 
 nsurvey = numel( x );
-u = W * ones( size(x) );
+u = zeros( size(x) );
 v = zeros( size(x) );
 
 % Explicit isurvey loop over survey points

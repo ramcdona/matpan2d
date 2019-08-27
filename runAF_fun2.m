@@ -1,6 +1,8 @@
-clear all
-format compact
-close all
+function [CLi, CDi, xep, yep ] = runAF_fun2( xoff2, yoff2, th2, drawplots )
+
+%clear all
+%format compact
+%close all
 
 % Freestream velocity
 % W = 1.0;
@@ -15,7 +17,7 @@ nsurvey = 51;
 
 nsl = 21;
 
-drawplots = true;
+% drawplots = true;
 drawmoreplots = false;
 
 ntstep = 1;
@@ -28,9 +30,9 @@ th = 0;       % Degrees about LE
 xoff = 0.0;      % X-Offset of LE
 yoff = 0.0;      % R-Offset of LE
 
-th2 = 10;       % Degrees about LE
-xoff2 = 0.0;      % X-Offset of LE
-yoff2 = 0.75;      % R-Offset of LE
+% th2 = 10;       % Degrees about LE
+% xoff2 = 0.0;      % X-Offset of LE
+% yoff2 = 0.75;      % R-Offset of LE
 
 
 % NACA 4-Digit airfoil parameters
@@ -72,7 +74,7 @@ jteus{1} = jteup;
 rads{1}=rad;
 Vexs{1}=Vex;
 
-if( false )
+if( true )
     [xep2, yep2, rad, Vex] = setupNACAduct( naf, chord, th2, xoff2, yoff2, dig1, dig2, dig34, flipaf, spacing );
 %    [xep2, yep2, rad2, Vex2] = setupellipse( naf, 0.5, 0.5, xoff2, yoff2 );
 
@@ -92,6 +94,19 @@ if( false )
     rads{2}=rad;
     Vexs{2}=Vex;
 end
+
+
+rep2s = sqrt( xep2.^2 + yep2.^2 ) - 0.5;
+
+if ( min(rep2s) < 0.05 )
+    
+    CLi{1} = nan;
+    CLi{2} = nan;
+    CDi = CLi;
+    
+    return;
+end
+
 
 % Execute script
 run('planar')
