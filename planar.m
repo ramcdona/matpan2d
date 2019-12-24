@@ -1137,18 +1137,18 @@ if( drawplots )
     view(0,90)
     title('Cp')
 
-%     figure(8)
-%     PlotTriStream( FlowP );
-%     if( exist( 'FlowPStreamtube', 'var' ) )
-%         PlotTriStream( FlowPStreamtube );
-%     end
-%     hold on
-%     plot(xsl,ysl,'--')
-%     for iseg=1:nseg
-%         plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
-%     end
-%     hold off
-%     axis equal
+    figure(8)
+    PlotTriStream( FlowP );
+    if( exist( 'FlowPStreamtube', 'var' ) )
+        PlotTriStream( FlowPStreamtube );
+    end
+    hold on
+%    plot(xsl,ysl,'--')
+    for iseg=1:nseg
+        plot( xepts{iseg}, yepts{iseg}, xuppts{iseg}, yuppts{iseg}, xlowpts{iseg}, ylowpts{iseg} );
+    end
+    hold off
+    axis equal
 
 %     figure(9)
 %     trisurf( tri(IO,:), xv, yv, zeros(size(xv)), Vmagv, 'LineStyle', 'none', 'FaceColor', 'interp' );
