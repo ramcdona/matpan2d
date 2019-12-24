@@ -15,6 +15,7 @@ nsurvey = 51;
 nsl = 21;
 
 drawplots = true;
+drawmoreplots = false;
 
 ntstep = 1;
 
@@ -68,7 +69,7 @@ jteus{1} = jteup;
 rads{1}=rad;
 Vexs{1}=Vex;
 
-if( true )
+if( false )
     [xep2, yep2, rad, Vex] = setupNACAduct( naf, chord, th2, xoff2, yoff2, dig1, dig2, dig34, flipaf, spacing );
     
     names{2} = ['NACA ' num2str(dig1) num2str(dig2) num2str(dig34) ' Duct'];
