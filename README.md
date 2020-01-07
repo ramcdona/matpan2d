@@ -31,6 +31,8 @@ Rob McDonald
   * Arbitrary combinations of bodies, ducts & disks
   * NACA 4-Digit duct generated on-the-fly
   * ~0.1 to 3 seconds for solution, ~10-15 seconds for visualization
+* Compressibility Correction
+  * Gothert's Rule w/ NRL Semi-empirical correction
 
 # Planned Work
 
@@ -39,13 +41,22 @@ Rob McDonald
   * NASA-TM-83207 Harris & Blanchard 1982
   * Loose coupling
     * Prescribed inviscid pressure distributions
-  * Strong coupling (may be possible)
+  * Strong coupling (may be possible / Planned)
     * Momentum thickness feedback to inviscid solver
     * Converge on combined viscous/inviscid flow
-* Design
+* Design (Planned)
   * Inviscid inverse design
   * Inviscid general pressure distribution matching
   * Design pressure distribution to tailor boundary layer
+
+# Compressibility Correction
+
+* Gothert's Rule w/ NRL Semi-empirical correction for bodies used to recover Cp.
+* Notes:
+  * Used equations 1 & 27-29.
+  * u, v, w are perturbation velocities
+  * U=1 assumed.
+* Th. E. Labrujere, W. Loeve, and J. W. Slooff, _An Approximate Method for the Calculation of the Pressure Distribution on Wing-Body Combinations at Subcritical Speeds_, National Aerospace Laboratory NLR, Amsterdam Netherlands, 1971, in AGARD-CP-71.
 
 # Examples
 
