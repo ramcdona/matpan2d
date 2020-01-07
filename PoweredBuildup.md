@@ -27,6 +27,12 @@ forebody.
  <a href="img/MATPAN2D31.png"><img src="img/MATPAN2D31.png" width=300 align="middle"/></a>
 </p>
 
+Flow capture area and capture streamline:
+
+<p align="middle">
+ <a href="img/image19.png"><img src="img/image19.png" width=400 align="middle"/></a>
+ <a href="img/image20.png"><img src="img/image20.png" width=400 align="middle"/></a>
+</p>
 
 ## Body, Duct & Heavily Loaded Disk
 
@@ -45,3 +51,9 @@ forebody.
  <a href="img/MATPAN2D35.png"><img src="img/MATPAN2D35.png" width=300 align="middle"/></a>
 </p>
 
+Flow capture area and capture streamline:
+
+<p align="middle">
+ <a href="img/image21.png"><img src="img/image21.png" width=400 align="middle"/></a>
+ <a href="img/image22.png"><img src="img/image22.png" width=400 align="middle"/></a>
+</p>
